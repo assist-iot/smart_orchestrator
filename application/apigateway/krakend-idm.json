@@ -1,0 +1,471 @@
+{
+  "$schema": "https://www.krakend.io/schema/v3.json",
+  "version": 3,
+  "name": "asdo",
+  "timeout": "3000ms",
+  "cache_ttl": "300s",
+  "output_encoding": "json",
+  "port": 8080,
+  "endpoints": [
+    {
+      "endpoint": "/clusters",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "auth/validator": {
+            "alg": "RS256",
+            "jwk_url": "http://idm-keycloak:8080/auth/realms/Asdo/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "operation_debug": true
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/clusters",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "host": [
+            "http://cluster-microservice:5002"
+          ],
+          "disable_host_sanitize": false,
+          "is_collection": true,
+          "target": "",
+          "mapping": {
+            "collection": "clusters"
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/clusters",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "auth/validator": {
+            "alg": "RS256",
+            "jwk_url": "http://idm-keycloak:8080/auth/realms/Asdo/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "operation_debug": true
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/clusters",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "host": [
+            "http://cluster-microservice:5002"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/clusters/{id}",
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "auth/validator": {
+            "alg": "RS256",
+            "jwk_url": "http://idm-keycloak:8080/auth/realms/Asdo/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "operation_debug": true
+        }
+      },
+      "input_query_strings": [],
+      "backend": [
+        {
+          "url_pattern": "/clusters/{id}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "DELETE",
+          "host": [
+            "http://cluster-microservice:5002"
+          ],
+          "disable_host_sanitize": false
+        }
+      ],
+      "input_headers": [
+        "Force"
+      ]
+    },
+    {
+      "endpoint": "/clusters/{id}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "auth/validator": {
+            "alg": "RS256",
+            "jwk_url": "http://idm-keycloak:8080/auth/realms/Asdo/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "operation_debug": true
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/clusters/{id}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "host": [
+            "http://cluster-microservice:5002"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/clusters/cloud/find",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "auth/validator": {
+            "alg": "RS256",
+            "jwk_url": "http://idm-keycloak:8080/auth/realms/Asdo/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "operation_debug": true
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/clusters/cloud/find",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "host": [
+            "http://cluster-microservice:5002"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/clusters/node/{id}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "auth/validator": {
+            "alg": "RS256",
+            "jwk_url": "http://idm-keycloak:8080/auth/realms/Asdo/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "operation_debug": true
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/clusters/node/{id}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "host": [
+            "http://cluster-microservice:5002"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/repos",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "auth/validator": {
+            "alg": "RS256",
+            "jwk_url": "http://idm-keycloak:8080/auth/realms/Asdo/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "operation_debug": true
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/repos",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "host": [
+            "http://repo-microservice:5003"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/repos/public",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "auth/validator": {
+            "alg": "RS256",
+            "jwk_url": "http://idm-keycloak:8080/auth/realms/Asdo/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "operation_debug": true
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/repos/public",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "host": [
+            "http://repo-microservice:5003"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/repos/private",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "auth/validator": {
+            "alg": "RS256",
+            "jwk_url": "http://idm-keycloak:8080/auth/realms/Asdo/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "operation_debug": true
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/repos/private",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "host": [
+            "http://repo-microservice:5003"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/repos/update",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "auth/validator": {
+            "alg": "RS256",
+            "jwk_url": "http://idm-keycloak:8080/auth/realms/Asdo/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "operation_debug": true
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/repos/update",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "host": [
+            "http://repo-microservice:5003"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/repos/{id}",
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "auth/validator": {
+            "alg": "RS256",
+            "jwk_url": "http://idm-keycloak:8080/auth/realms/Asdo/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "operation_debug": true
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/repos/{id}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "DELETE",
+          "host": [
+            "http://repo-microservice:5003"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/enabler",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "auth/validator": {
+            "alg": "RS256",
+            "jwk_url": "http://idm-keycloak:8080/auth/realms/Asdo/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "operation_debug": true
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/enabler",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "host": [
+            "http://enabler-microservice:5004"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/enabler/upgrade/{id}",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "auth/validator": {
+            "alg": "RS256",
+            "jwk_url": "http://idm-keycloak:8080/auth/realms/Asdo/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "operation_debug": true
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/enabler/upgrade/{id}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "host": [
+            "http://enabler-microservice:5004"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/enabler",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "auth/validator": {
+            "alg": "RS256",
+            "jwk_url": "http://idm-keycloak:8080/auth/realms/Asdo/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "operation_debug": true
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/enabler",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "host": [
+            "http://enabler-microservice:5004"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/enabler/cluster/{id}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "auth/validator": {
+            "alg": "RS256",
+            "jwk_url": "http://idm-keycloak:8080/auth/realms/Asdo/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "operation_debug": true
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/enabler/cluster/{id}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "GET",
+          "host": [
+            "http://enabler-microservice:5004"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/enabler/{id}",
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "auth/validator": {
+            "alg": "RS256",
+            "jwk_url": "http://idm-keycloak:8080/auth/realms/Asdo/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "operation_debug": true
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/enabler/{id}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "DELETE",
+          "extra_config": {
+            "modifier/body-generator": {
+              "template": "ewogICJ1cGRhdGUiOnsKICAgICJmb3JjZSI6ICJ7eyAucmVxX2JvZHkuZm9yY2V9fSIKICB9Cn0="
+            }
+          },
+          "host": [
+            "http://enabler-microservice:5004"
+          ],
+          "disable_host_sanitize": false
+        }
+      ],
+      "input_headers": [
+        "Timeout",
+        "Force"
+      ]
+    },
+    {
+      "endpoint": "/enabler/volumes/{id}",
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "extra_config": {
+        "auth/validator": {
+            "alg": "RS256",
+            "jwk_url": "http://idm-keycloak:8080/auth/realms/Asdo/protocol/openid-connect/certs",
+            "disable_jwk_security": true,
+            "operation_debug": true
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/enabler/volumes/{id}",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "DELETE",
+          "host": [
+            "http://enabler-microservice:5004"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    },
+    {
+      "endpoint": "/login",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/realms/Asdo/protocol/openid-connect/token",
+          "encoding": "no-op",
+          "sd": "static",
+          "method": "POST",
+          "host": [
+            "http://idm-keycloak:8080"
+          ],
+          "disable_host_sanitize": false
+        }
+      ]
+    }
+  ]
+}

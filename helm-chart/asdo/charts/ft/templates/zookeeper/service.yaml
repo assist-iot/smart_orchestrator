@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "zookeeper.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "zookeeper.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.zookeeper.service.type }}
+  ports:
+    - name: zookeeper
+      port: {{ .Values.zookeeper.service.ports.zookeeper.port }}
+      targetPort: {{ .Values.zookeeper.service.ports.zookeeper.targetPort }}
+      protocol: {{ .Values.zookeeper.service.ports.zookeeper.protocol }}
+      {{- if and (or (eq .Values.zookeeper.service.type "NodePort") (eq .Values.zookeeper.service.type "LoadBalancer")) (not (empty .Values.zookeeper.service.ports.zookeeper.nodePort)) }}
+      nodePort: {{ .Values.zookeeper.service.ports.zookeeper.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "zookeeper.selectorLabels" . | nindent 4 }}

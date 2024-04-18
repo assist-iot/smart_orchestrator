@@ -1,0 +1,76 @@
+{{- if .Values.tags.pilot }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "car.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "car.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.car.autoscaling.enabled }}
+  replicas: {{ .Values.car.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "car.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "car.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.car.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+      - name: db-test-car
+        image: alpine:latest
+        command: ["sh", "-c",{{ include "asdo.initContainerCommand" . | quote }}]
+      - name: mqtt-test-car
+        image: alpine:latest
+        command: ["sh", "-c",{{ include "mqtt.initContainerCommand" . | quote }}]
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.car.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.car.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.car.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.car.podSecurityContext | nindent 8 }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: car
+          securityContext:
+            {{- toYaml .Values.car.securityContext | nindent 12 }}
+          image: "{{ .Values.car.image.repository }}:{{ .Values.car.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.car.image.pullPolicy }}
+          ports:
+            - name: car
+              containerPort: {{ .Values.car.service.ports.car.containerPort }}
+              protocol: {{ .Values.car.service.ports.car.protocol }}
+          resources:
+            {{- toYaml .Values.car.resources | nindent 12 }}
+          env:
+            - name: FIWARE
+              value: {{ include "fiware.uri" . | quote }}
+            - name: PORT
+              value: {{ .Values.car.service.ports.car.port | quote}}
+            - name: REPOSITORY
+              value: {{ include "repository.uri" . | quote }}
+            - name: MQTT_HOST
+              value: {{ include "vernemq.fullname" .Subcharts.edgedatabroker }}
+            - name: MQTT_PORT
+              value: {{ .Values.car.envVars.mqttPort | quote}}
+{{- end }}

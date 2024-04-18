@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mysql.svc.headless" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "mysql.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - name: mysql
+      port: {{ .Values.scheduler.prediction.mysql.service.ports.mysql.port }}
+      targetPort: {{ .Values.scheduler.prediction.mysql.service.ports.mysql.targetPort }}
+      protocol: {{ .Values.scheduler.prediction.mysql.service.ports.mysql.protocol }}
+  selector:
+    {{- include "mysql.selectorLabels" . | nindent 4 }}

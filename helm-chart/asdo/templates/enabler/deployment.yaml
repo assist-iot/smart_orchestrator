@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "enablers.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "enablers.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.enablers.autoscaling.enabled }}
+  replicas: {{ .Values.enablers.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "enablers.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "enablers.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.enablers.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: db-test-enabler
+          image: alpine:latest
+          command: ["sh", "-c",{{ include "asdo.initContainerCommand" . | quote }}]
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.enablers.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.enablers.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.enablers.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.enablers.podSecurityContext | nindent 8 }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: enablers
+          securityContext:
+            {{- toYaml .Values.enablers.securityContext | nindent 12 }}
+          image: "{{ .Values.enablers.image.repository }}:{{ .Values.enablers.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.enablers.image.pullPolicy }}
+          ports:
+            - name: enablers
+              containerPort: {{ .Values.enablers.service.ports.enablers.containerPort }}
+              protocol: {{ .Values.enablers.service.ports.enablers.protocol }}
+          resources:
+            {{- toYaml .Values.enablers.resources | nindent 12 }}
+          env:
+            - name: MONGODB_URI
+              value: {{ include "enablers.mongoUri" . | quote }}
+            - name: PORT
+              value: {{ .Values.enablers.service.ports.enablers.port | quote}}
+            - name: HELM
+              value: {{ include "helm.uri" . | quote }}
+            - name: CLUSTER
+              value: {{ include "cluster.uri" . | quote }}
+            - name: REPO
+              value: {{ include "repository.uri" . | quote }}
+            - name: SCHEDULER
+              value: {{ include "scheduler.uri" . | quote }}

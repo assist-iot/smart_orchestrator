@@ -1,0 +1,17 @@
+{{- if .Values.globalService }}
+apiVersion: assist.eu/v1
+kind: MultiClusterService
+metadata:
+  name: {{ include "apigateway.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  annotations:
+    io.cilium/global-service: "true"
+  labels:
+    {{- include "apigateway.labels" . | nindent 4 }}
+spec:
+  ports:
+    - name: http
+      port: {{ .Values.apigateway.service.ports.http.port }}
+      targetPort: {{ .Values.apigateway.service.ports.http.targetPort }}
+      protocol: {{ .Values.apigateway.service.ports.http.protocol }}
+{{- end }}

@@ -1,0 +1,17 @@
+{{- if .Values.globalService }}
+apiVersion: assist.eu/v1
+kind: MultiClusterService
+metadata:
+  name: {{ include "kafka.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  annotations:
+    io.cilium/global-service: "true"
+  labels:
+    {{- include "kafka.labels" . | nindent 4 }}
+spec:
+  ports:
+    - name: kafka
+      port: {{ .Values.kafka.service.ports.kafka.port }}
+      targetPort: {{ .Values.kafka.service.ports.kafka.targetPort }}
+      protocol: {{ .Values.kafka.service.ports.kafka.protocol }}
+{{- end }}

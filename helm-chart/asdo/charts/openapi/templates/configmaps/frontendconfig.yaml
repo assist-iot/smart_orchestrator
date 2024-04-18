@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontendconfig
+  namespace: {{ .Release.Namespace | quote }}
+data:
+    keycloak.json: |-
+      {
+        "realm": "OpenAPI",
+        "auth-server-url": "http://192.168.250.156:30722/auth/",
+        "ssl-required": "external",
+        "resource": "public-frontend",
+        "public-client":true,
+        "confidential-port": 0
+      }

@@ -1,0 +1,6 @@
+apiVersion: v2
+appVersion: 0.1.0
+description: Fault Tolerance Enabler
+name: ft
+type: application
+version: 0.1.0

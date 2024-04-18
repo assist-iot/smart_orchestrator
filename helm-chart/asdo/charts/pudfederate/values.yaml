@@ -1,0 +1,93 @@
+# Default values for enabler.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# String to partially override enabler.fullname template (will maintain the release name).
+nameOverride: ""
+# String to fully override enabler.fullname template.
+fullnameOverride: ""
+# Deploy all the components in specific K8s node(s).
+enablerNodeSelector: {
+  "node-role.kubernetes.io/master":"yes"
+}
+# Cilium Multi-cluster global service.
+globalService: false
+
+serviceAccountName: asdo
+
+# Component pudfederate values.
+pudfederate:
+  tier: external
+  replicaCount: 1
+
+  # Configuration of the container image.
+  imagePullSecrets: []
+  image:
+    repository: prom/prometheus
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  
+  # Configuration of the service: type and ports.
+  service:
+    type: ClusterIP
+    ports:
+      pudfederate:
+        port: 9090
+        targetPort: 9090
+        containerPort: 9090
+        nodePort: ""
+        protocol: TCP
+
+  # The specification of the resources is needed for the proper functioning 
+  # of the Smart Orchestrator enabler (requests)
+  # and of the Resource provisioning enabler (limits).
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    # minReplicas: 1
+    # maxReplicas: 3
+    # targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  # Include here the environment variables to be used in containers section of the component's manifest.
+  # TODO: Here and in the manifest is included an example, please adapt them to the requirements of your component.
+  envVars:
+    exampleEnvVar: exampleValue
+
+
+  # Configure this parameters to deploy the component in specific K8s node(s).
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  volumes:
+    pv:
+      name: pv-volume-pudfederate
+      accessMode: ReadWriteMany
+      size: 100Mi
+      storageClassName: pudfederate
+      path: /mnt/data
+    pvc:
+      name: pv-claim-pudfederate
+      accessMode: ReadWriteMany
+      size: 100Mi
+      storageClassName: pudfederate

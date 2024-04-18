@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pudfederate.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "pudfederate.labels" . | nindent 4 }}
+  annotations:
+    {{- if .Values.globalService }}
+    {{- include "globalServiceAnnotations" . | nindent 4 }}
+    {{- end }}
+spec:
+  type: {{ .Values.pudfederate.service.type }}
+  ports:
+    - name: pudfederate
+      port: {{ .Values.pudfederate.service.ports.pudfederate.port }}
+      targetPort: {{ .Values.pudfederate.service.ports.pudfederate.targetPort }}
+      protocol: {{ .Values.pudfederate.service.ports.pudfederate.protocol }}
+      {{- if and (or (eq .Values.pudfederate.service.type "NodePort") (eq .Values.pudfederate.service.type "LoadBalancer")) (not (empty .Values.pudfederate.service.ports.pudfederate.nodePort)) }}
+      nodePort: {{ .Values.pudfederate.service.ports.pudfederate.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "pudfederate.selectorLabels" . | nindent 4 }}

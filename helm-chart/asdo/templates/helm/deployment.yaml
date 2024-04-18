@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "helm.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "helm.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.helm.autoscaling.enabled }}
+  replicas: {{ .Values.helm.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "helm.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "helm.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.helm.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.helm.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.helm.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.helm.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.helm.podSecurityContext | nindent 8 }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: helm
+          securityContext:
+            {{- toYaml .Values.helm.securityContext | nindent 12 }}
+          image: "{{ .Values.helm.image.repository }}:{{ .Values.helm.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.helm.image.pullPolicy }}
+          ports:
+            - name: helm
+              containerPort: {{ .Values.helm.service.ports.helm.containerPort }}
+              protocol: {{ .Values.helm.service.ports.helm.protocol }}
+          resources:
+            {{- toYaml .Values.helm.resources | nindent 12 }}
+          {{- with .Values.helm.envVars }}
+          env:
+            - name: REPO_DIR
+              value: {{ .repoDir | quote }}
+            - name: CACHE_DIR
+              value: {{ .cacheDir | quote }}
+            - name: CONFIG
+              value: {{ .config | quote }}
+          {{- end }}
+          volumeMounts:
+            - name: respositories
+              mountPath: /root/.config/helm/
+      volumes:
+        - name: respositories
+          persistentVolumeClaim:
+            claimName: {{ .Values.helm.volumes.pvc.name | quote }}

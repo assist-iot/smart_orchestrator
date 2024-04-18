@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "mysql.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "mysql.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "mysql.fullname" . }}-headless
+  replicas: {{ .Values.scheduler.prediction.mysql.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "mysql.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mysql.selectorLabels" . | nindent 8 }}
+    spec:
+      terminationGracePeriodSeconds: 10
+      volumes:
+        - name: mysql-initdb
+          configMap:
+            name:  {{ include "mysql.fullname" . }}-configmap
+      containers:
+        - name: mysql
+          securityContext:
+            {{- toYaml .Values.scheduler.prediction.mysql.securityContext | nindent 12 }}
+          image: "{{ .Values.scheduler.prediction.mysql.image.repository }}:{{ .Values.scheduler.prediction.mysql.image.tag }}"
+          imagePullPolicy: {{ .Values.scheduler.prediction.mysql.image.pullPolicy }}
+          ports:
+            - name: mysql
+              containerPort: {{ .Values.scheduler.prediction.mysql.service.ports.mysql.containerPort }}
+              protocol: {{ .Values.scheduler.prediction.mysql.service.ports.mysql.protocol }}
+          resources:
+            {{- toYaml .Values.scheduler.prediction.mysql.resources | nindent 12 }}
+          {{- with .Values.scheduler.prediction.mysql.envVars }}
+          env:
+            - name: MYSQL_DATABASE
+              value: {{ .data | quote }}
+            - name: MYSQL_ROOT_PASSWORD
+              value: {{ .root | quote }}
+            - name: MYSQL_USER
+              value: {{ .user | quote }}
+            - name: MYSQL_PASSWORD
+              value: {{ .password | quote }}
+          {{- end }}
+          volumeMounts:
+            - name: claim
+              mountPath: /var/lib/mysql
+            - name: mysql-initdb
+              mountPath: /docker-entrypoint-initdb.d
+  volumeClaimTemplates:
+    - metadata:
+        name: claim
+      spec:
+        accessModes:
+        {{- range .Values.scheduler.prediction.mysql.persistence.accessModes }}
+          - {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.scheduler.prediction.mysql.persistence.size | quote }}

@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "mc.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "mc.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.scheduler.prediction.mc.schedule | quote }}
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 3
+      template:
+        spec:
+          {{- with .Values.scheduler.prediction.mc.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
+          securityContext:
+            {{- toYaml .Values.scheduler.prediction.mc.podSecurityContext | nindent 12 }}
+          containers:
+          - name: mc
+            securityContext:
+              {{- toYaml .Values.scheduler.prediction.mc.securityContext | nindent 14 }}
+            image: "{{ .Values.scheduler.prediction.mc.image.repository }}:{{ .Values.scheduler.prediction.mc.image.tag | default .Chart.AppVersion }}"
+            imagePullPolicy: {{ .Values.scheduler.prediction.mc.image.pullPolicy }}
+            env:
+                {{- with .Values.scheduler.prediction.mysql.envVars }}
+                - name: MYSQL_USER
+                  value: {{ .user | quote }} 
+                - name: MYSQL_PASSWORD
+                  value: {{ .password | quote }}
+                - name: MYSQL_DATABASE
+                  value: {{ .data | quote }}
+                {{- end }}
+                - name: MYSQL_HOST
+                  value: {{ include "mysql.fullname" . }}
+                - name: MYSQL_PORT
+                  value: {{ .Values.scheduler.prediction.mysql.service.ports.mysql.containerPort | quote }}
+                - name: MONGODB_HOST
+                  value: {{ include "db.fullname" . }}
+                - name: PROM_HOST
+                  value: {{ include "pudfederate.fullname" .Subcharts.pudfederate | quote }}
+                - name: PROM_PORT
+                  value: {{ .Values.scheduler.prediction.mc.envVars.promPort | quote }}
+          restartPolicy: {{ .Values.scheduler.prediction.mc.restartPolicy }}

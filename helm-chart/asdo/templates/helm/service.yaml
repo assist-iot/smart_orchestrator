@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "helm.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "helm.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.helm.service.type }}
+  ports:
+    - name: helm
+      port: {{ .Values.helm.service.ports.helm.port }}
+      targetPort: {{ .Values.helm.service.ports.helm.targetPort }}
+      protocol: {{ .Values.helm.service.ports.helm.protocol }}
+      {{- if and (or (eq .Values.helm.service.type "NodePort") (eq .Values.helm.service.type "LoadBalancer")) (not (empty .Values.helm.service.ports.helm.nodePort)) }}
+      nodePort: {{ .Values.helm.service.ports.helm.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "helm.selectorLabels" . | nindent 4 }}

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mysql.fullname" . }}-configmap
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "mysql.labels" . | nindent 4 }}
+data:
+  initdb.sql: |
+    USE data;
+    CREATE TABLE IF NOT EXISTS cluster (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      name VARCHAR(255) NOT NULL,
+      timestamp DATETIME NOT NULL,
+      cpu INT NOT NULL,
+      ram INT NOT NULL,
+      traffic FLOAT NOT NULL,
+      is_real BOOLEAN NOT NULL
+    );

@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cluster.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "cluster.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.cluster.autoscaling.enabled }}
+  replicas: {{ .Values.cluster.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "cluster.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "cluster.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.cluster.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+      - name: db-test-cluster
+        image: alpine:latest
+        command: ["sh", "-c",{{ include "asdo.initContainerCommand" . | quote }}]
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.cluster.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.cluster.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.cluster.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.cluster.podSecurityContext | nindent 8 }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: cluster
+          securityContext:
+            {{- toYaml .Values.cluster.securityContext | nindent 12 }}
+          image: "{{ .Values.cluster.image.repository }}:{{ .Values.cluster.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.cluster.image.pullPolicy }}
+          ports:
+            - name: cluster
+              containerPort: {{ .Values.cluster.service.ports.cluster.containerPort }}
+              protocol: {{ .Values.cluster.service.ports.cluster.protocol }}
+          resources:
+            {{- toYaml .Values.cluster.resources | nindent 12 }}
+          env:
+            - name: MONGODB_URI
+              value: {{ include "cluster.mongoUri" . | quote }}
+            - name: PORT
+              value: {{ .Values.cluster.service.ports.cluster.port | quote}}
+            - name: ENABLER
+              value: {{ include "enablers.uri" . | quote }}              
+          volumeMounts:
+            - name: pv-prometheus
+              mountPath: /etc/targets/
+      volumes:
+        - name: pv-prometheus
+          persistentVolumeClaim:
+            claimName: {{ .Values.cluster.volumes.pvc.name | quote }}

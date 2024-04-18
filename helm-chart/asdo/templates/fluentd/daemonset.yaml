@@ -1,0 +1,42 @@
+{{- if .Values.tags.pilot }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ template "fluentd.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "fluentd.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "fluentd.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "fluentd.labels" . | nindent 8 }}
+    spec:
+      serviceAccount: {{ template "fluentd.fullname" . }}
+      serviceAccountName: {{ template "fluentd.fullname" . }}
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: fluentd
+        image: {{ .Values.fluentd.image.repository }}:{{ .Values.fluentd.image.tag }}
+        env:
+        - name: FLUENT_ELASTICSEARCH_HOST
+          value: {{ include "api.fullname" .Subcharts.ltse | quote}}
+{{- toYaml .Values.fluentd.envVars | nindent 8 }}
+        resources:
+          limits:
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        volumeMounts:
+{{- toYaml .Values.fluentd.volumeMounts | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.fluentd.terminationGracePeriodSeconds }}
+      volumes:
+{{- toYaml .Values.fluentd.volumes | nindent 8 }}
+
+{{- end }}

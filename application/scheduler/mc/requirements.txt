@@ -1,0 +1,7 @@
+requests==2.27.1
+peewee==3.14.10
+kubernetes
+pymysql
+pint
+pymongo
+prometheus_api_client

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "keycloak.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "keycloak.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.keycloak.service.type }}
+  ports:
+    - port: {{ .Values.keycloak.service.port }}
+      targetPort: {{ .Values.keycloak.service.targetPort }}
+      protocol: {{ .Values.keycloak.service.protocol }}
+      {{- if and (or (eq .Values.keycloak.service.type "NodePort") (eq .Values.keycloak.service.type "LoadBalancer")) (not (empty .Values.keycloak.service.nodePort)) }}
+      nodePort: {{ .Values.keycloak.service.nodePort }}
+      {{ end }}
+  selector:
+    {{- include "keycloak.selectorLabels" . | nindent 4 }}

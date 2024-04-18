@@ -1,0 +1,3 @@
+curl -s -X POST http://localhost:32443/plugins -d name=oidc -d config.client_id=kong-client -d config.client_secret=f7w2HosCtz0nnbsfYrief4KoEd4FSoV1 -d config.bearer_only=yes -d config.realm=OpenAPI -d config.introspection_endpoint=http://192.168.250.156:30722/auth/realms/OpenAPI/protocol/openid-connect/token/introspect -d config.discovery=http://192.168.250.156:30722/auth/realms/OpenAPI/.well-known/openid-configuration | jq
+
+se ha cambiado en el helpers la linea 539: {{ $myList := list "bundled" }} por {{ $myList := list "oidc" }}

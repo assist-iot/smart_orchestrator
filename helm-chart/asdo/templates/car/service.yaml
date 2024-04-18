@@ -1,0 +1,21 @@
+{{- if .Values.tags.pilot }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "car.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "car.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.car.service.type }}
+  ports:
+    - name: car
+      port: {{ .Values.car.service.ports.car.port }}
+      targetPort: {{ .Values.car.service.ports.car.targetPort }}
+      protocol: {{ .Values.car.service.ports.car.protocol }}
+      {{- if and (or (eq .Values.car.service.type "NodePort") (eq .Values.car.service.type "LoadBalancer")) (not (empty .Values.car.service.ports.car.nodePort)) }}
+      nodePort: {{ .Values.car.service.ports.car.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "car.selectorLabels" . | nindent 4 }}
+{{- end }}

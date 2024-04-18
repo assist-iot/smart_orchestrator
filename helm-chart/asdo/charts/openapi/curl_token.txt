@@ -1,0 +1,3 @@
+curl -s -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "username=demouser" -d "password=demouser" -d 'grant_type=password' -d "client_id=public-backend-access" http://192.168.250.156:30722/auth/realms/OpenAPI/protocol/openid-connect/token | jq .
+
+curl -i http://localhost:32744/fakeapi -H "Accept: application/json" -H "Authorization: Bearer $TKN"

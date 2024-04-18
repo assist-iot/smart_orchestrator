@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "vernemq.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "vernemq.labels" . | nindent 4 }}
+  annotations:
+    {{- if .Values.globalService }}
+    {{- include "globalServiceAnnotations" . | nindent 4 }}
+    {{- end }}
+spec:
+  type: {{ .Values.vernemq.service.type }}
+  ports:
+    {{- if .Values.vernemq.service.ports.mqtt.enabled }}
+    - name: mqtt
+      port: {{ .Values.vernemq.service.ports.mqtt.port }}
+      targetPort: {{ .Values.vernemq.service.ports.mqtt.targetPort }}
+      protocol: {{ .Values.vernemq.service.ports.mqtt.protocol }}
+      {{- if and (or (eq .Values.vernemq.service.type "NodePort") (eq .Values.vernemq.service.type "LoadBalancer")) (not (empty .Values.vernemq.service.ports.mqtt.nodePort)) }}
+      nodePort: {{ .Values.vernemq.service.ports.mqtt.nodePort }}
+      {{- end }}
+    {{- end }}
+    {{- if .Values.vernemq.service.ports.mqtts.enabled }}
+    - name: mqtts
+      port: {{ .Values.vernemq.service.ports.mqtts.port }}
+      targetPort: {{ .Values.vernemq.service.ports.mqtts.targetPort }}
+      protocol: {{ .Values.vernemq.service.ports.mqtts.protocol }}
+      {{- if and (or (eq .Values.vernemq.service.type "NodePort") (eq .Values.vernemq.service.type "LoadBalancer")) (not (empty .Values.vernemq.service.ports.mqtts.nodePort)) }}
+      nodePort: {{ .Values.vernemq.service.ports.mqtts.nodePort }}
+      {{- end }}
+    {{- end }}
+    {{- if .Values.vernemq.service.ports.ws.enabled }}
+    - name: ws
+      port: {{ .Values.vernemq.service.ports.ws.port }}
+      targetPort: {{ .Values.vernemq.service.ports.ws.targetPort }}
+      protocol: {{ .Values.vernemq.service.ports.ws.protocol }}
+      {{- if and (or (eq .Values.vernemq.service.type "NodePort") (eq .Values.vernemq.service.type "LoadBalancer")) (not (empty .Values.vernemq.service.ports.ws.nodePort)) }}
+      nodePort: {{ .Values.vernemq.service.ports.ws.nodePort }}
+      {{- end }}
+    {{- end }}
+    {{- if .Values.vernemq.service.ports.wss.enabled }}
+    - name: wss
+      port: {{ .Values.vernemq.service.ports.wss.port }}
+      targetPort: {{ .Values.vernemq.service.ports.wss.targetPort }}
+      protocol: {{ .Values.vernemq.service.ports.wss.protocol }}
+      {{- if and (or (eq .Values.vernemq.service.type "NodePort") (eq .Values.vernemq.service.type "LoadBalancer")) (not (empty .Values.vernemq.service.ports.wss.nodePort)) }}
+      nodePort: {{ .Values.vernemq.service.ports.wss.nodePort }}
+      {{- end }}
+    {{- end }}
+    {{- if .Values.vernemq.service.ports.prometheus.enabled }}
+    - name: prometheus
+      port: {{ .Values.vernemq.service.ports.prometheus.port }}
+      targetPort: {{ .Values.vernemq.service.ports.prometheus.targetPort }}
+      protocol: {{ .Values.vernemq.service.ports.prometheus.protocol }}
+      {{- if and (or (eq .Values.vernemq.service.type "NodePort") (eq .Values.vernemq.service.type "LoadBalancer")) (not (empty .Values.vernemq.service.ports.prometheus.nodePort)) }}
+      nodePort: {{ .Values.vernemq.service.ports.prometheus.nodePort }}
+      {{- end }}
+    {{- end }}
+  selector:
+    {{- include "vernemq.selectorLabels" . | nindent 4 }}

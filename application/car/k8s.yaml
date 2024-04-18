@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: car-microservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      type: microservice
+      tier: car
+  template:
+    metadata:
+      labels:
+        type: microservice
+        tier: car
+    spec:
+      serviceAccountName: asdo
+      containers:
+        - name: car-microservice
+          image: gitlab.assist-iot.eu:5050/enablers-registry/public/asdo/car:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5005
+          env:
+            - name: PORT
+              value: "5005"
+            - name: REPO_HOST
+              value: "smart-smartorchestrator-repository"
+            - name: REPO_PORT
+              value: "5003"
+            - name: REPOSITORY
+              value: "http://$(REPO_HOST):$(REPO_PORT)"
+            - name: FIWARE_HOST
+              value: "smart-orion"
+            - name: FIWARE_PORT
+              value: "1026"
+            - name: FIWARE
+              value: "http://$(FIWARE_HOST):$(FIWARE_PORT)/v2"
+            - name: MQTT_HOST
+              value: "smart-edgedatabroker-vernemq"
+            - name: MQTT_PORT
+              value: "1883"

@@ -1,0 +1,68 @@
+{{- if .Values.tags.pilot }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ftedb.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "ftedb.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.ftedb.autoscaling.enabled }}
+  replicas: {{ .Values.ftedb.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "ftedb.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ftedb.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.ftedb.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+      - name: ft-test-ftedb
+        image: alpine:latest
+        command: ["sh", "-c",{{ include "ft.initContainerCommand" . | quote }}]
+      - name: mqtt-test-ftedb
+        image: alpine:latest
+        command: ["sh", "-c",{{ include "mqtt.initContainerCommand" . | quote }}]
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.ftedb.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.ftedb.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ftedb.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.ftedb.podSecurityContext | nindent 8 }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: ftedb
+          securityContext:
+            {{- toYaml .Values.ftedb.securityContext | nindent 12 }}
+          image: "{{ .Values.ftedb.image.repository }}:{{ .Values.ftedb.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.ftedb.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.ftedb.resources | nindent 12 }}
+          env:
+            - name: KAFKA_BUS
+              value: {{ include "kafka.fullname" .Subcharts.ft | quote }}
+            - name: MQTT_BROKER
+              value: {{ include "vernemq.fullname" .Subcharts.edgedatabroker }}
+            - name: MQTT_PORT
+              value: {{ .Values.ftedb.envVars.mqttPort | quote}}
+{{- end }}

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "enablers.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "enablers.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.enablers.service.type }}
+  ports:
+    - name: enablers
+      port: {{ .Values.enablers.service.ports.enablers.port }}
+      targetPort: {{ .Values.enablers.service.ports.enablers.targetPort }}
+      protocol: {{ .Values.enablers.service.ports.enablers.protocol }}
+      {{- if and (or (eq .Values.enablers.service.type "NodePort") (eq .Values.enablers.service.type "LoadBalancer")) (not (empty .Values.enablers.service.ports.enablers.nodePort)) }}
+      nodePort: {{ .Values.enablers.service.ports.enablers.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "enablers.selectorLabels" . | nindent 4 }}

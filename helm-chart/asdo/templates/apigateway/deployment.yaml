@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "apigateway.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "apigateway.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.apigateway.autoscaling.enabled }}
+  replicas: {{ .Values.apigateway.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "apigateway.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "apigateway.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.apigateway.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.apigateway.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.apigateway.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.apigateway.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.apigateway.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: krakend-cfg
+          configMap:
+            name: {{ include "apigateway.fullname" . }}-configmap
+      containers:
+        - name: apigateway
+          securityContext:
+            {{- toYaml .Values.apigateway.securityContext | nindent 12 }}
+          image: "{{ .Values.apigateway.image.repository }}:{{ .Values.apigateway.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.apigateway.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.apigateway.service.ports.http.containerPort }}
+              protocol: {{ .Values.apigateway.service.ports.http.protocol }}
+          volumeMounts:
+            - name: krakend-cfg
+              mountPath: /etc/krakend
+          resources:
+            {{- toYaml .Values.apigateway.resources | nindent 12 }}
+          {{- with .Values.apigateway.envVars }}
+          env:
+            - name: KRAKEND_PORT
+              value: {{ .krakendPort | quote }}
+          {{- end }}

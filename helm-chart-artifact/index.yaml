@@ -1,0 +1,55 @@
+apiVersion: v1
+entries:
+  smartorchestrator:
+  - apiVersion: v2
+    appVersion: 4.0.0
+    created: "2024-04-18T20:08:05.608209307+02:00"
+    dependencies:
+    - name: orion
+      repository: ""
+      tags:
+      - pilot
+      version: 1.2.6
+    - name: edgedatabroker
+      repository: ""
+      tags:
+      - pilot
+      version: 0.1.2
+    - name: ltse
+      repository: ""
+      tags:
+      - pilot
+      version: 1.0.0
+    - name: ft
+      repository: ""
+      tags:
+      - pilot
+      version: 0.1.0
+    - name: semanticrepository
+      repository: ""
+      tags:
+      - pilot
+      version: 1.0.0
+    - name: idm
+      repository: ""
+      tags:
+      - pilot
+      version: 0.1.0
+    - name: authorization
+      repository: ""
+      tags:
+      - pilot
+      version: 0.1.0
+    - name: openapi
+      repository: ""
+      tags:
+      - pilot
+      version: 0.2.2
+    description: Smart Orchestrator Enabler
+    digest: b2103f1786ae76942bcafeb94db23f4443f8a96ad71fb290d27c98f732e5b0d0
+    name: smartorchestrator
+    type: application
+    urls:
+    - smartorchestrator-4.0.0.tgz
+    version: 4.0.0
+generated: "2024-04-18T20:08:05.588206954+02:00"

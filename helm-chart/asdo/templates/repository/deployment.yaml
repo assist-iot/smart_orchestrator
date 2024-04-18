@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "repository.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "repository.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.repository.autoscaling.enabled }}
+  replicas: {{ .Values.repository.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "repository.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "repository.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.repository.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: db-test-repository
+          image: alpine:latest
+          command: ["sh", "-c",{{ include "asdo.initContainerCommand" . | quote }}]
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.repository.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.repository.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.repository.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.repository.podSecurityContext | nindent 8 }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: repository
+          securityContext:
+            {{- toYaml .Values.repository.securityContext | nindent 12 }}
+          image: "{{ .Values.repository.image.repository }}:{{ .Values.repository.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.repository.image.pullPolicy }}
+          ports:
+            - name: repo
+              containerPort: {{ .Values.repository.service.ports.repo.containerPort }}
+              protocol: {{ .Values.repository.service.ports.repo.protocol }}
+          resources:
+            {{- toYaml .Values.repository.resources | nindent 12 }}
+          env:
+            - name: MONGODB_URI
+              value: {{ include "repository.mongoUri" . | quote }}
+            - name: PORT
+              value: {{ .Values.repository.service.ports.repo.port | quote}}
+            - name: HELM
+              value: {{ include "helm.uri" . | quote }}

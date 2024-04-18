@@ -1,0 +1,29 @@
+apiVersion: assist.eu/v1
+kind: MultiClusterService
+metadata:
+  name: ltse-multi-api
+  namespace: "default"
+  labels:
+    helm.sh/chart: ltse-multi-0.4.0
+    app.kubernetes.io/name: ltse-multi
+    app.kubernetes.io/instance: ltse-multi
+    enabler: ltse-multi
+    app.kubernetes.io/component: api
+    isMainInterface: "yes"
+    tier: external
+    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    io.cilium/global-service: "true"
+spec:
+  ports:
+    - name: api
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+    - name: api2
+      port: 8084
+      targetPort: 8084
+      protocol: TCP
+
+    

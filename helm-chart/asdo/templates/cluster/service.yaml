@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cluster.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "cluster.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.cluster.service.type }}
+  ports:
+    - name: cluster
+      port: {{ .Values.cluster.service.ports.cluster.port }}
+      targetPort: {{ .Values.cluster.service.ports.cluster.targetPort }}
+      protocol: {{ .Values.cluster.service.ports.cluster.protocol }}
+      {{- if and (or (eq .Values.cluster.service.type "NodePort") (eq .Values.cluster.service.type "LoadBalancer")) (not (empty .Values.cluster.service.ports.cluster.nodePort)) }}
+      nodePort: {{ .Values.cluster.service.ports.cluster.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "cluster.selectorLabels" . | nindent 4 }}

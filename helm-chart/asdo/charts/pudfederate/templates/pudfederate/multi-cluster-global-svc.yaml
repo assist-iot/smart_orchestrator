@@ -1,0 +1,17 @@
+{{- if .Values.globalService }}
+apiVersion: assist.eu/v1
+kind: MultiClusterService
+metadata:
+  name: {{ include "pudfederate.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  annotations:
+    io.cilium/global-service: "true"
+  labels:
+    {{- include "pudfederate.labels" . | nindent 4 }}
+spec:
+  ports:
+    - name: pudfederate
+      port: {{ .Values.pudfederate.service.ports.pudfederate.port }}
+      targetPort: {{ .Values.pudfederate.service.ports.pudfederate.targetPort }}
+      protocol: {{ .Values.pudfederate.service.ports.pudfederate.protocol }}
+{{- end }}

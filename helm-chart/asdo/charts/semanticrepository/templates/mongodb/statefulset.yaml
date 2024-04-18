@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "mongodb.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "mongodb.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "mongodb.fullname" . }}-headless
+  {{- if not .Values.mongodb.autoscaling.enabled }}
+  replicas: {{ .Values.mongodb.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "mongodb.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mongodb.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.mongodb.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.mongodb.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.mongodb.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mongodb.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.mongodb.podSecurityContext | nindent 8 }}
+      containers:
+        - name: mongodb
+          securityContext:
+            {{- toYaml .Values.mongodb.securityContext | nindent 12 }}
+          image: "{{ .Values.mongodb.image.repository }}:{{ .Values.mongodb.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.mongodb.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.mongodb.service.containerPort }}
+              protocol: {{ .Values.mongodb.service.protocol }}
+          resources:
+            {{- toYaml .Values.mongodb.resources | nindent 12 }}
+          env:
+            - name: MONGODB_ROOT_PASSWORD
+              value: {{ .Values.mongodb.envVars.mongoRootPassword | quote }}
+#            - name: MONGODB_USER
+#              value: {{ .Values.mongodb.envVars.mongoUser | quote }}
+#            - name: MONGODB_PASSWORD
+#              value: {{ .Values.mongodb.envVars.mongoPassword | quote }}
+#            - name: MONGODB_DATABASE
+#              value: 'semrepo'
+            - name: MONGODB_REPLICA_SET_MODE
+              value: 'primary'
+            - name: MONGODB_REPLICA_SET_NAME
+              value: {{ .Values.mongodb.envVars.mongoReplicaSet | quote }}
+            - name: MONGODB_REPLICA_SET_KEY
+              value: 'replicasetkey'
+            - name: MONGODB_ADVERTISED_HOSTNAME
+              value: {{ include "mongodb.fullname" . | quote }}
+          volumeMounts:
+            - name: data
+              mountPath: /bitnami
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+        {{- range .Values.mongodb.persistence.accessModes }}
+          - {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.mongodb.persistence.size | quote }}

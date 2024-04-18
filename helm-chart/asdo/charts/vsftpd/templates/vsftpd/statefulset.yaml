@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "vsftpd.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "vsftpd.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "vsftpd.fullname" . }}-headless
+  {{- if not .Values.vsftpd.autoscaling.enabled }}
+  replicas: {{ .Values.vsftpd.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "vsftpd.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "vsftpd.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.vsftpd.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.vsftpd.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.vsftpd.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.vsftpd.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.vsftpd.podSecurityContext | nindent 8 }}
+      containers:
+        - name: vsftpd
+          securityContext:
+            {{- toYaml .Values.vsftpd.securityContext | nindent 12 }}
+          image: "{{ .Values.vsftpd.image.repository }}:{{ .Values.vsftpd.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.vsftpd.image.pullPolicy }}
+          ports:
+            - name: ftp1
+              containerPort: {{ .Values.vsftpd.service.ports.ftp1.containerPort }}
+              protocol: {{ .Values.vsftpd.service.ports.ftp1.protocol }}
+            - name: ftp2
+              containerPort: {{ .Values.vsftpd.service.ports.ftp2.containerPort }}
+              protocol: {{ .Values.vsftpd.service.ports.ftp2.protocol }}
+            - name: ftp3
+              containerPort: {{ .Values.vsftpd.service.ports.ftp3.containerPort }}
+              protocol: {{ .Values.vsftpd.service.ports.ftp3.protocol }}
+          resources:
+            {{- toYaml .Values.vsftpd.resources | nindent 12 }}
+          env:
+          {{- range $key, $value := .Values.vsftpd.envVars }}
+            - name: {{ $key }}
+              value: {{ $value | quote}}
+          {{- end }}
+            - name: PASV_MIN_PORT
+              value: {{ .Values.vsftpd.service.ports.ftp3.port | quote }}
+            - name: PASV_MAX_PORT
+              value: {{ .Values.vsftpd.service.ports.ftp3.port | quote }}
+          volumeMounts:
+            - name: data
+              mountPath: /home/vsftpd
+            - name: certificates
+              mountPath: /etc/vsftpd/cert
+      volumes:
+        - name: data
+          hostPath:
+            path: {{ .Values.vsftpd.persistence.hostPath }}
+        - name: certificates
+          secret:
+            secretName: vsftpd-server-certificates

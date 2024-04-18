@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "api.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "api.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.api.autoscaling.enabled }}
+  replicas: {{ .Values.api.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "api.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "api.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.api.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.api.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.api.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.api.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.api.podSecurityContext | nindent 8 }}
+      containers:
+        - name: api
+          securityContext:
+            {{- toYaml .Values.api.securityContext | nindent 12 }}
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          ports:
+            - name: api
+              containerPort: {{ .Values.api.service.ports.api.containerPort }}
+              protocol: {{ .Values.api.service.ports.api.protocol }}
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          env:
+            - name: POSTGRESQL_HOST
+              value: {{ include "postgresql.fullname" . | quote }}
+            - name: POSTGRESQL_PORT
+              value: {{ .Values.postgresql.service.ports.postgresql.port | quote }}
+            - name: POSTGRESQL_USER
+              value: {{ .Values.postgresql.envVars.postgresUser | quote }}
+            - name: POSTGRESQL_PASS
+              value: {{ .Values.postgresql.envVars.postgresPassword | quote }}
+            - name: ELASTIC_HOST
+              value: {{ include "elastic.fullname" . | quote }}
+            - name: ELASTIC_PORT
+              value: {{ .Values.elastic.service.ports.api.port | quote }}
+            - name: POSTGREST_HOST
+              value: {{ include "postgrest.fullname" . | quote }}
+            - name: POSTGREST_PORT
+              value: {{ .Values.postgrest.service.ports.postgrest.port | quote }}

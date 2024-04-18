@@ -1,0 +1,40 @@
+dependencies:
+  - name: orion
+    version: 1.2.6
+    tags: 
+      - pilot
+
+  - name: edgedatabroker
+    version: 0.1.2
+    tags: 
+      - pilot
+    
+  - name: ltse
+    version: 1.0.0
+    tags: 
+      - pilot
+
+  - name: ft
+    version: 0.1.0
+    tags: 
+      - pilot
+  
+  - name: semanticrepository
+    version: 1.0.0
+    tags:
+      - pilot
+  
+  - name: idm
+    version: 0.1.0
+    tags:
+      - pilot
+    
+  - name: authorization
+    version: 0.1.0
+    tags:
+      - pilot
+
+  - name: openapi
+    version: 0.2.2
+    tags:
+      - pilot

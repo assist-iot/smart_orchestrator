@@ -1,0 +1,33 @@
+{{- if .Values.globalService }}
+apiVersion: assist.eu/v1
+kind: MultiClusterService
+metadata:
+  name: {{ include "vernemq.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  annotations:
+    io.cilium/global-service: "true"
+  labels:
+    {{- include "vernemq.labels" . | nindent 4 }}
+spec:
+  ports:
+    - name: mqtt
+      port: {{ .Values.vernemq.service.ports.mqtt.port }}
+      targetPort: {{ .Values.vernemq.service.ports.mqtt.targetPort }}
+      protocol: {{ .Values.vernemq.service.ports.mqtt.protocol }}
+    - name: mqtts
+      port: {{ .Values.vernemq.service.ports.mqtts.port }}
+      targetPort: {{ .Values.vernemq.service.ports.mqtts.targetPort }}
+      protocol: {{ .Values.vernemq.service.ports.mqtts.protocol }}
+    - name: ws
+      port: {{ .Values.vernemq.service.ports.ws.port }}
+      targetPort: {{ .Values.vernemq.service.ports.ws.targetPort }}
+      protocol: {{ .Values.vernemq.service.ports.ws.protocol }}
+    - name: wss
+      port: {{ .Values.vernemq.service.ports.wss.port }}
+      targetPort: {{ .Values.vernemq.service.ports.wss.targetPort }}
+      protocol: {{ .Values.vernemq.service.ports.wss.protocol }}
+    - name: prometheus
+      port: {{ .Values.vernemq.service.ports.prometheus.port }}
+      targetPort: {{ .Values.vernemq.service.ports.prometheus.targetPort }}
+      protocol: {{ .Values.vernemq.service.ports.prometheus.protocol }}
+{{- end }}

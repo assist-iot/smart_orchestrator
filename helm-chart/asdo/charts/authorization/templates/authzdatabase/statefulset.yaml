@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "authzdatabase.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "authzdatabase.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "authzdatabase.fullname" . }}-headless
+  {{- if not .Values.authzdatabase.autoscaling.enabled }}
+  replicas: {{ .Values.authzdatabase.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "authzdatabase.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "authzdatabase.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.authzdatabase.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.authzdatabase.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.authzdatabase.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.authzdatabase.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.authzdatabase.podSecurityContext | nindent 8 }}
+      containers:
+        - name: authzdatabase
+          securityContext:
+            {{- toYaml .Values.authzdatabase.securityContext | nindent 12 }}
+          image: "{{ .Values.authzdatabase.image.repository }}:{{ .Values.authzdatabase.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.authzdatabase.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.authzdatabase.service.containerPort }}
+              protocol: {{ .Values.authzdatabase.service.protocol }}
+          resources:
+            {{- toYaml .Values.authzdatabase.resources | nindent 12 }}
+          {{- with .Values.authzdatabase.envVars }}
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: {{ .mysql_root_password | quote }}
+            - name: MYSQL_DATABASE
+              value: {{ .mysql_database| quote }}
+          {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+        {{- range .Values.authzdatabase.persistence.accessModes }}
+          - {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.authzdatabase.persistence.size | quote }}

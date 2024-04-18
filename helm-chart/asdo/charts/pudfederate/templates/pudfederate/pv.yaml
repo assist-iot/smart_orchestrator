@@ -1,0 +1,14 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: {{ .Values.pudfederate.volumes.pv.name | quote }}
+  labels:
+    {{- include "pudfederate.selectorLabels" . | nindent 8 }}
+spec:
+  accessModes:
+    - {{ .Values.pudfederate.volumes.pv.accessMode | quote }}
+  capacity:
+    storage: {{ .Values.pudfederate.volumes.pv.size | quote }}
+  hostPath:
+    path: {{ .Values.pudfederate.volumes.pv.path | quote }}
+  storageClassName:  {{ .Values.pudfederate.volumes.pv.storageClassName | quote }}

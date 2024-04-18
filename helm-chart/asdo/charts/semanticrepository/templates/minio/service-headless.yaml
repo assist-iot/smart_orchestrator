@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "minio.svc.headless" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "minio.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - port: {{ .Values.minio.service.port }}
+      targetPort: {{ .Values.minio.service.targetPort }}
+      protocol: {{ .Values.minio.service.protocol }}
+  selector:
+    {{- include "minio.selectorLabels" . | nindent 4 }}

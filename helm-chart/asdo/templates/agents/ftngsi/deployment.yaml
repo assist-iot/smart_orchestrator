@@ -1,0 +1,65 @@
+{{- if .Values.tags.pilot }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ftngsi.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "ftngsi.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.ftngsi.autoscaling.enabled }}
+  replicas: {{ .Values.ftngsi.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "ftngsi.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ftngsi.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.ftngsi.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+      - name: ft-test-ftngsi
+        image: alpine:latest
+        command: ["sh", "-c",{{ include "ft.initContainerCommand" . | quote }}]
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.ftngsi.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.ftngsi.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ftngsi.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.ftngsi.podSecurityContext | nindent 8 }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: ftngsi
+          securityContext:
+            {{- toYaml .Values.ftngsi.securityContext | nindent 12 }}
+          image: "{{ .Values.ftngsi.image.repository }}:{{ .Values.ftngsi.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.ftngsi.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.ftngsi.resources | nindent 12 }}
+          env:
+            - name: ORION_HOST
+              value: {{ include "orion.fullname" .Subcharts.orion | quote }}
+            - name: ORION_PORT
+              value: {{ .Values.ftngsi.envVars.fiwarePort | quote }}
+            - name: KAFKA_BUS
+              value: {{ include "kafka.fullname" .Subcharts.ft | quote }}
+{{- end }}

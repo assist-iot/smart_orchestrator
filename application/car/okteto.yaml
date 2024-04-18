@@ -1,0 +1,16 @@
+build:
+  smart-smartorchestrator-car:
+    dockerfile: Dockerfile
+    image: gitlab.assist-iot.eu:5050/enablers-registry/public/asdo/car:latest
+deploy:
+  - kubectl apply -f k8s.yaml -n asdo
+dev:
+  smart-smartorchestrator-car:
+    namespace: asdo
+    command: ["sh"]
+    forward:
+      - 5005:5005
+      - 2345:2345
+    sync:
+      - .:/usr/src/app
+

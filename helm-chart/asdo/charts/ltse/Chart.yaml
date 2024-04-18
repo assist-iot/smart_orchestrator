@@ -1,0 +1,11 @@
+apiVersion: v2
+appVersion: 1.0.0
+description: The Helm chart of the Long Term Data Storage Enabler
+maintainers:
+- email: ravagar2@upv.es
+  name: Rafael Vaño
+- email: egarro@prodevelop.es
+  name: Eduardo Garro
+name: ltse
+type: application
+version: 1.0.0

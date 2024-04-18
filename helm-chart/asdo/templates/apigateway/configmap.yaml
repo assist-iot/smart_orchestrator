@@ -1,0 +1,1747 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "apigateway.fullname" . }}-configmap
+data:
+  krakend.json: |-
+    {
+      "$schema": "https://www.krakend.io/schema/v3.json",
+      "version": 3,
+      "name": "asdo",
+      "timeout": "3000ms",
+      "cache_ttl": "300s",
+      "output_encoding": "json",
+      "port": 8080,
+      "endpoints": [
+        {
+          "endpoint": "/version",
+          "method": "GET",
+          "backend": [
+                {
+                    "host": ["http://your.backend"],
+                    "url_pattern": "/foo",
+                    "group": "foo"
+                }
+          ],
+          "extra_config": {
+            "proxy": {
+                "static": {
+                    "strategy": "errored",
+                    "data": {
+                        "name": "Smart-Orchestrator",
+                        "version": {{ .Chart.AppVersion | quote }}
+                    }
+                }
+            }
+          }
+        },
+        {
+          "endpoint": "/api-export",
+          "method": "GET",
+          "backend": [
+                {
+                    "host": ["http://your.backend"],
+                    "url_pattern": "/foo",
+                    "group": "foo"
+                }
+          ],
+          "extra_config": {
+            "proxy": {
+                "static": {
+                    "strategy": "errored",
+                    "data": 
+                      {
+                        "openapi":"3.0.2",
+                        "info":{
+                            "version":{{ .Chart.AppVersion | quote }},
+                            "title":"Smart Orchestrator enabler OpenAPI",
+                            "license":{
+                              "name":"Apache 2.0",
+                              "url":"http://www.apache.org/licenses/LICENSE-2.0.html"
+                            },
+                            "x-logo":{
+                              "url":"https://redocly.github.io/openapi-template/logo.png"
+                            },
+                            "description":"Smart Orchestrator enabler \n"
+                        },
+                        "tags":[
+                            {
+                              "name":"v1",
+                              "description":"Smart Orchestrator V1 OpenAPI\n"
+                            }
+                        ],
+                        "paths":{
+                            "/clusters":{
+                              "post":{
+                                  "tags":[
+                                    "K8s Cluster"
+                                  ],
+                                  "summary":"K8s Cluster registration",
+                                  "description":"Add a new `K8s Cluster`",
+                                  "operationId":"addK8sCluster",
+                                  "responses":{
+                                    "200":{
+                                        "description":"Accepted",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/Object_Uid"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "400":{
+                                        "$ref":"#/components/responses/BadRequest"
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  },
+                                  "requestBody":{
+                                    "$ref":"#/components/requestBodies/CreateK8sClusterRequest"
+                                  }
+                              },
+                              "get":{
+                                  "tags":[
+                                    "K8s Cluster"
+                                  ],
+                                  "summary":"Get all K8s Clusters",
+                                  "description":"Get all `K8s Clusters`\n",
+                                  "operationId":"getK8sClusters",
+                                  "responses":{
+                                    "200":{
+                                        "description":"OK",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/ArrayOfK8sClusterInfo"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  }
+                              }
+                            },
+                            "/clusters/cloud/find":{
+                              "get":{
+                                  "tags":[
+                                    "K8s Cluster"
+                                  ],
+                                  "summary":"Get Cloud K8s Cluster",
+                                  "description":"Get Cloud `K8s Cluster`\n",
+                                  "operationId":"getCloudK8sClusters",
+                                  "responses":{
+                                    "200":{
+                                        "description":"OK",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/K8sClusterInfo"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  }
+                              }
+                            },
+                            "/clusters/node/{k8sClusterId}":{
+                              "parameters":[
+                                  {
+                                    "name":"k8sClusterId",
+                                    "in":"path",
+                                    "required":true,
+                                    "description":"K8s Cluster ID",
+                                    "schema":{
+                                        "type":"string",
+                                        "format":"uuid"
+                                    }
+                                  }
+                              ],
+                              "get":{
+                                  "tags":[
+                                    "K8s Cluster"
+                                  ],
+                                  "summary":"Get K8s nodes by Cluster",
+                                  "description":"Get K8s nodes by `K8s Cluster`",
+                                  "responses":{
+                                    "200":{
+                                        "description":"OK",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/ArrayOfNodes"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  }
+                              }
+                            },
+                            "/clusters/{k8sClusterId}":{
+                              "parameters":[
+                                  {
+                                    "name":"k8sClusterId",
+                                    "in":"path",
+                                    "required":true,
+                                    "description":"K8s Cluster ID",
+                                    "schema":{
+                                        "type":"string",
+                                        "format":"uuid"
+                                    }
+                                  }
+                              ],
+                              "get":{
+                                  "tags":[
+                                    "K8s Cluster"
+                                  ],
+                                  "summary":"Get K8s Cluster by id",
+                                  "description":"Get K8s Cluster by `id`\n",
+                                  "operationId":"getK8sClustersById",
+                                  "responses":{
+                                    "200":{
+                                        "description":"OK",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/K8sClusterInfo"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  }
+                              },
+                              "delete":{
+                                  "tags":[
+                                    "K8s Cluster"
+                                  ],
+                                  "parameters":[
+                                    {
+                                        "name":"Force",
+                                        "in":"header",
+                                        "required":true,
+                                        "schema":{
+                                          "type":"boolean",
+                                          "default":false,
+                                          "description":"Set to true to force deletion"
+                                        }
+                                    }
+                                  ],
+                                  "summary":"Delete a K8s Cluster",
+                                  "description":"Delete a `K8s Clusters`",
+                                  "operationId":"deleteK8sCluster",
+                                  "responses":{
+                                    "200":{
+                                        "description":"Accepted",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/Object_Uid"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "400":{
+                                        "$ref":"#/components/responses/BadRequest"
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  }
+                              }
+                            },
+                            "/repos":{
+                              "get":{
+                                  "tags":[
+                                    "Chart Repositories"
+                                  ],
+                                  "summary":"Query information about multiple K8s Repos",
+                                  "description":"Query information about multiple `K8s Repository`",
+                                  "operationId":"getK8sRepos",
+                                  "responses":{
+                                    "200":{
+                                        "description":"OK",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/ArrayOfK8sRepoInfo"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  }
+                              }
+                            },
+                            "/repos/charts/{k8sRepoId}":{
+                              "get":{
+                                  "parameters":[
+                                    {
+                                        "name":"k8sRepoId",
+                                        "in":"path",
+                                        "required":true,
+                                        "description":"K8s Repository ID",
+                                        "schema":{
+                                          "type":"string",
+                                          "format":"uuid"
+                                        }
+                                    }
+                                  ],
+                                  "tags":[
+                                    "Chart Repositories"
+                                  ],
+                                  "summary":"Query information about the Helm Charts in a K8s Repository",
+                                  "description":"Query information about the Helm Charts in a `K8s Repository`",
+                                  "operationId":"getChartsK8sRepo",
+                                  "responses":{
+                                    "200":{
+                                        "description":"OK",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/ArrayOfChartsInK8sRepo"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  }
+                              }
+                            },
+                            "/repos/public":{
+                              "post":{
+                                  "tags":[
+                                    "Chart Repositories"
+                                  ],
+                                  "summary":"Create a new K8s Public Repo",
+                                  "description":"Create a new `K8s Public Repository`",
+                                  "operationId":"createPublicK8sRepo",
+                                  "requestBody":{
+                                    "$ref":"#/components/requestBodies/CreateK8sRepoRequestPublic"
+                                  },
+                                  "responses":{
+                                    "200":{
+                                        "description":"Accepted",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/Object_Uid"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "400":{
+                                        "$ref":"#/components/responses/BadRequest"
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  }
+                              }
+                            },
+                            "/repos/private":{
+                              "post":{
+                                  "tags":[
+                                    "Chart Repositories"
+                                  ],
+                                  "summary":"Create a new K8s Private Repo",
+                                  "description":"Create a new `K8s Private Repository`",
+                                  "operationId":"createPrivateK8sRepo",
+                                  "requestBody":{
+                                    "$ref":"#/components/requestBodies/CreateK8sRepoRequestPrivate"
+                                  },
+                                  "responses":{
+                                    "200":{
+                                        "description":"Accepted",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/Object_Uid"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "400":{
+                                        "$ref":"#/components/responses/Conflict"
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  }
+                              }
+                            },
+                            "/repos/update":{
+                              "post":{
+                                  "tags":[
+                                    "Chart Repositories"
+                                  ],
+                                  "summary":"Update K8s Repositories",
+                                  "description":"Update `K8s Repositories`",
+                                  "operationId":"udpateK8sRepo",
+                                  "responses":{
+                                    "200":{
+                                        "description":"Accepted",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/Object_Message"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  }
+                              }
+                            },
+                            "/repos/{k8sRepoId}":{
+                              "parameters":[
+                                  {
+                                    "name":"k8sRepoId",
+                                    "in":"path",
+                                    "required":true,
+                                    "description":"K8s Repo ID",
+                                    "schema":{
+                                        "type":"string",
+                                        "format":"uuid"
+                                    }
+                                  }
+                              ],
+                              "delete":{
+                                  "tags":[
+                                    "Chart Repositories"
+                                  ],
+                                  "summary":"Delete a K8s Repo",
+                                  "description":"Delete a `K8s Repository`",
+                                  "operationId":"deleteK8sRepo",
+                                  "responses":{
+                                    "200":{
+                                        "description":"Accepted",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/Object_Uid"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "400":{
+                                        "$ref":"#/components/responses/BadRequest"
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  }
+                              }
+                            },
+                            "/enabler":{
+                              "get":{
+                                  "tags":[
+                                    "Enablers"
+                                  ],
+                                  "summary":"Get information about multiple Enablers",
+                                  "description":"Query information about multiple `Enablers`",
+                                  "operationId":"getK8sEnablers",
+                                  "responses":{
+                                    "200":{
+                                        "description":"OK",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/ArrayOfEnablersByCluster"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  }
+                              },
+                              "post":{
+                                  "tags":[
+                                    "Enablers"
+                                  ],
+                                  "summary":"Post Enabler",
+                                  "description":"Add a new `Enabler`",
+                                  "operationId":"postK8sEnabler",
+                                  "responses":{
+                                    "200":{
+                                        "description":"Accepted",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/Object_Uid"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "400":{
+                                        "$ref":"#/components/responses/BadRequest"
+                                    },
+                                    "409":{
+                                        "$ref":"#/components/responses/Conflict"
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  },
+                                  "requestBody":{
+                                    "$ref":"#/components/requestBodies/CreateEnablerRequest"
+                                  }
+                              }
+                            },
+                            "/enabler/cluster/{clusterId}":{
+                              "parameters":[
+                                  {
+                                    "name":"clusterId",
+                                    "in":"path",
+                                    "required":true,
+                                    "description":"cluster ID",
+                                    "schema":{
+                                        "type":"string",
+                                        "format":"uuid"
+                                    }
+                                  }
+                              ],
+                              "get":{
+                                  "tags":[
+                                    "Enablers"
+                                  ],
+                                  "summary":"Query information about Enablers in a cluster",
+                                  "description":"Query information about `Enablers` in a cluster",
+                                  "operationId":"getEnablersByCluster",
+                                  "responses":{
+                                    "200":{
+                                        "description":"OK",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/ArrayOfEnablersByCluster"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  }
+                              }
+                            },
+                            "/enabler/volumes/{enablerId}":{
+                              "parameters":[
+                                  {
+                                    "name":"enablerId",
+                                    "in":"path",
+                                    "required":true,
+                                    "description":"Enabler ID",
+                                    "schema":{
+                                        "type":"string",
+                                        "format":"uuid"
+                                    }
+                                  }
+                              ],
+                              "delete":{
+                                  "tags":[
+                                    "Enablers"
+                                  ],
+                                  "summary":"Delete PV and PVC of an Enabler",
+                                  "description":"Delete PV and PVC of an `Enabler`",
+                                  "operationId":"deletePV",
+                                  "responses":{
+                                    "200":{
+                                        "description":"Accepted",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/Object_Uid"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "400":{
+                                        "$ref":"#/components/responses/BadRequest"
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  }
+                              }
+                            },
+                            "/enabler/upgrade/{enablerId}":{
+                              "parameters":[
+                                  {
+                                    "name":"enablerId",
+                                    "in":"path",
+                                    "required":true,
+                                    "description":"Enabler ID",
+                                    "schema":{
+                                        "type":"string",
+                                        "format":"uuid"
+                                    }
+                                  }
+                              ],
+                              "post":{
+                                  "tags":[
+                                    "Enablers"
+                                  ],
+                                  "summary":"Upgrade version of an Enabler",
+                                  "description":"Upgrade version of an `Enabler`",
+                                  "operationId":"upgradeEnabler",
+                                  "responses":{
+                                    "200":{
+                                        "description":"Accepted",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/Object_Uid"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "400":{
+                                        "$ref":"#/components/responses/BadRequest"
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  },
+                                  "requestBody":{
+                                    "$ref":"#/components/requestBodies/UpgradeEnabler"
+                                  }
+                              }
+                            },
+                            "/enabler/{enablerId}":{
+                              "parameters":[
+                                  {
+                                    "name":"enablerId",
+                                    "in":"path",
+                                    "required":true,
+                                    "description":"Enabler ID",
+                                    "schema":{
+                                        "type":"string",
+                                        "format":"uuid"
+                                    }
+                                  }
+                              ],
+                              "delete":{
+                                  "tags":[
+                                    "Enablers"
+                                  ],
+                                  "summary":"Delete an Enabler",
+                                  "description":"Delete an `Enabler`",
+                                  "operationId":"deleteEnabler",
+                                  "responses":{
+                                    "200":{
+                                        "description":"Accepted",
+                                        "content":{
+                                          "application/json":{
+                                              "schema":{
+                                                "$ref":"#/components/schemas/Object_Uid"
+                                              }
+                                          }
+                                        }
+                                    },
+                                    "400":{
+                                        "$ref":"#/components/responses/BadRequest"
+                                    },
+                                    "500":{
+                                        "$ref":"#/components/responses/InternalServerError"
+                                    }
+                                  }
+                              }
+                            }
+                        },
+                        "components":{
+                            "schemas":{
+                              "ProblemDetails":{
+                                  "type":"object",
+                                  "properties":{
+                                    "code":{
+                                        "type":"number"
+                                    },
+                                    "message":{
+                                        "type":"string"
+                                    }
+                                  },
+                                  "required":[
+                                    "code",
+                                    "status",
+                                    "detail"
+                                  ]
+                              },
+                              "Object_Uid":{
+                                  "type":"object",
+                                  "properties":{
+                                    "uid":{
+                                        "type":"string",
+                                        "format":"uuid"
+                                    }
+                                  }
+                              },
+                              "Object_Message":{
+                                  "type":"object",
+                                  "properties":{
+                                    "message":{
+                                        "type":"string"
+                                    }
+                                  }
+                              },
+                              "CreateK8sClusterRequest":{
+                                  "type":"object",
+                                  "properties":{
+                                    "name":{
+                                        "type":"string"
+                                    },
+                                    "description":{
+                                        "type":"string"
+                                    },
+                                    "credentials":{
+                                        "type":"object"
+                                    },
+                                    "cloud":{
+                                        "type":"boolean"
+                                    },
+                                    "cni":{
+                                        "type":"string"
+                                    }
+                                  },
+                                  "required":[
+                                    "name",
+                                    "credentials",
+                                    "k8s_version"
+                                  ],
+                                  "additionalProperties":false
+                              },
+                              "K8sClusterInfo":{
+                                  "type":"object",
+                                  "properties":{
+                                    "_id":{
+                                        "type":"string",
+                                        "format":"uuid"
+                                    },
+                                    "uid":{
+                                        "type":"string",
+                                        "format":"uuid"
+                                    },
+                                    "name":{
+                                        "type":"string"
+                                    },
+                                    "description":{
+                                        "type":"string"
+                                    },
+                                    "credentials":{
+                                        "type":"object"
+                                    },
+                                    "status":{
+                                        "type":"string"
+                                    },
+                                    "cloud":{
+                                        "type":"boolean"
+                                    },
+                                    "cni":{
+                                        "type":"string"
+                                    },
+                                    "__v":{
+                                        "type":"string"
+                                    }
+                                  }
+                              },
+                              "ArrayOfK8sClusterInfo":{
+                                  "type":"array",
+                                  "items":{
+                                    "$ref":"#/components/schemas/K8sClusterInfo"
+                                  }
+                              },
+                              "ArrayOfK8sRepoInfo":{
+                                  "type":"array",
+                                  "items":{
+                                    "$ref":"#/components/schemas/K8sRepoInfo"
+                                  }
+                              },
+                              "ArrayOfChartsInK8sRepo":{
+                                  "type":"array",
+                                  "items":{
+                                    "$ref":"#/components/schemas/K8sRepoCharts"
+                                  }
+                              },
+                              "K8sRepoCharts":{
+                                  "type":"object",
+                                  "properties":{
+                                    "Name":{
+                                        "type":"string"
+                                    },
+                                    "versions":{
+                                        "type":"array",
+                                        "items":{
+                                          "type":"string"
+                                        }
+                                    }
+                                  }
+                              },
+                              "K8sRepoInfo":{
+                                  "type":"object",
+                                  "properties":{
+                                    "_id":{
+                                        "type":"string",
+                                        "format":"uuid"
+                                    },
+                                    "uid":{
+                                        "type":"string",
+                                        "format":"uuid"
+                                    },
+                                    "name":{
+                                        "type":"string"
+                                    },
+                                    "description":{
+                                        "type":"string"
+                                    },
+                                    "url":{
+                                        "type":"string",
+                                        "format":"uri"
+                                    },
+                                    "type":{
+                                        "type":"string",
+                                        "description":"repository access type"
+                                    },
+                                    "status":{
+                                        "type":"string",
+                                        "description":"repository status"
+                                    }
+                                  }
+                              },
+                              "CreateK8sRepoRequestPublic":{
+                                  "type":"object",
+                                  "properties":{
+                                    "name":{
+                                        "type":"string"
+                                    },
+                                    "description":{
+                                        "type":"string"
+                                    },
+                                    "url":{
+                                        "type":"string",
+                                        "format":"uri"
+                                    }
+                                  },
+                                  "required":[
+                                    "name",
+                                    "url"
+                                  ]
+                              },
+                              "CreateK8sRepoRequestPrivate":{
+                                  "type":"object",
+                                  "properties":{
+                                    "name":{
+                                        "type":"string"
+                                    },
+                                    "description":{
+                                        "type":"string"
+                                    },
+                                    "url":{
+                                        "type":"string",
+                                        "format":"uri"
+                                    },
+                                    "auth":{
+                                        "$ref":"#/components/schemas/AuthRepoPrivate"
+                                    }
+                                  },
+                                  "required":[
+                                    "name",
+                                    "url",
+                                    "auth"
+                                  ]
+                              },
+                              "AuthRepoPrivate":{
+                                  "type":"object",
+                                  "properties":{
+                                    "username":{
+                                        "type":"string"
+                                    },
+                                    "password":{
+                                        "type":"string"
+                                    }
+                                  },
+                                  "required":[
+                                    "username",
+                                    "password"
+                                  ]
+                              },
+                              "ArrayOfEnablers":{
+                                  "type":"array",
+                                  "items":{
+                                    "$ref":"#/components/schemas/Object_Enabler_DB"
+                                  }
+                              },
+                              "CreateEnablerRequest":{
+                                  "type":"object",
+                                  "properties":{
+                                    "name":{
+                                        "type":"string"
+                                    },
+                                    "helmChart":{
+                                        "type":"string"
+                                    },
+                                    "values":{
+                                        "type":"object"
+                                    },
+                                    "cluster":{
+                                        "type":"string"
+                                    },
+                                    "version":{
+                                        "type":"string"
+                                    },
+                                    "timeout":{
+                                        "type":"number"
+                                    },
+                                    "auto":{
+                                        "type":"boolean"
+                                    },
+                                    "placementPolicy":{
+                                        "type":"string"
+                                    }
+                                  }
+                              },
+                              "UpgradeEnabler":{
+                                  "type":"object",
+                                  "properties":{
+                                    "values":{
+                                        "type":"string"
+                                    },
+                                    "version":{
+                                        "type":"string"
+                                    },
+                                    "timeout":{
+                                        "type":"number"
+                                    }
+                                  }
+                              },
+                              "CreateEnablerTerminate":{
+                                  "type":"object",
+                                  "properties":{
+                                    
+                                  }
+                              },
+                              "ObjectId":{
+                                  "type":"object",
+                                  "properties":{
+                                    "id":{
+                                        "type":"string",
+                                        "format":"uuid"
+                                    }
+                                  }
+                              },
+                              "Object_Enabler_DB":{
+                                  "type":"object",
+                                  "properties":{
+                                    "_id":{
+                                        "type":"string",
+                                        "format":"uuid"
+                                    },
+                                    "uid":{
+                                        "type":"string",
+                                        "format":"uuid"
+                                    },
+                                    "name":{
+                                        "type":"string"
+                                    },
+                                    "cluster":{
+                                        "type":"string",
+                                        "format":"uuid"
+                                    },
+                                    "helmChart":{
+                                        "type":"string"
+                                    },
+                                    "status":{
+                                        "type":"string"
+                                    },
+                                    "__v":{
+                                        "type":"number"
+                                    },
+                                    "description":{
+                                        "type":"string"
+                                    }
+                                  }
+                              },
+                              "Object_Node_Cluster":{
+                                  "type":"object",
+                                  "properties":{
+                                    "name":{
+                                        "type":"string"
+                                    },
+                                    "labels":{
+                                        "type":"object"
+                                    }
+                                  }
+                              },
+                              "ArrayOfEnablersByCluster":{
+                                  "type":"array",
+                                  "items":{
+                                    "$ref":"#/components/schemas/Object_Enabler_DB"
+                                  }
+                              },
+                              "ArrayOfNodes":{
+                                  "type":"array",
+                                  "items":{
+                                    "$ref":"#/components/schemas/Object_Node_Cluster"
+                                  }
+                              }
+                            },
+                            "requestBodies":{
+                              "CreateK8sClusterRequest":{
+                                  "content":{
+                                    "application/json":{
+                                        "schema":{
+                                          "$ref":"#/components/schemas/CreateK8sClusterRequest"
+                                        },
+                                        "example":{
+                                          "name":"cloud",
+                                          "description":"cloud cluster",
+                                          "credentials":{
+                                              
+                                          },
+                                          "cloud":true,
+                                          "cni":"cilium"
+                                        }
+                                    },
+                                    "application/yaml":{
+                                        "schema":{
+                                          "$ref":"#/components/schemas/CreateK8sClusterRequest"
+                                        }
+                                    }
+                                  }
+                              },
+                              "CreateK8sRepoRequestPublic":{
+                                  "content":{
+                                    "application/json":{
+                                        "schema":{
+                                          "$ref":"#/components/schemas/CreateK8sRepoRequestPublic"
+                                        },
+                                        "example":{
+                                          "name":"public",
+                                          "description":"public chart repo",
+                                          "url":"https://gitlab.assist-iot.eu/api/v4/projects/85/packages/helm/stable"
+                                        }
+                                    },
+                                    "application/yaml":{
+                                        "schema":{
+                                          "$ref":"#/components/schemas/CreateK8sRepoRequestPublic"
+                                        }
+                                    }
+                                  }
+                              },
+                              "CreateK8sRepoRequestPrivate":{
+                                  "content":{
+                                    "application/json":{
+                                        "schema":{
+                                          "$ref":"#/components/schemas/CreateK8sRepoRequestPrivate"
+                                        },
+                                        "example":{
+                                          "name":"assist",
+                                          "description":"assist public repo",
+                                          "url":"https://raw.githubusercontent.com/xxxx/helm-private/main/",
+                                          "auth":{
+                                              "username":"xxxx",
+                                              "password":"pasdfjkeqwr_asdfjye3we33120"
+                                          }
+                                        }
+                                    },
+                                    "application/yaml":{
+                                        "schema":{
+                                          "$ref":"#/components/schemas/CreateK8sRepoRequestPrivate"
+                                        }
+                                    }
+                                  }
+                              },
+                              "CreateEnablerRequest":{
+                                  "content":{
+                                    "application/json":{
+                                        "schema":{
+                                          "$ref":"#/components/schemas/CreateEnablerRequest"
+                                        },
+                                        "example":{
+                                          "name":"businesskpi",
+                                          "helmChart":"public/businesskpi",
+                                          "values":{
+                                              "globalService":true
+                                          },
+                                          "cluster":"23584f91-46c3-46df-ac9c-e18f6f062079",
+                                          "version":"",
+                                          "timeout":50,
+                                          "auto":false,
+                                          "placement_policy":"best-fit"
+                                        }
+                                    },
+                                    "application/yaml":{
+                                        "schema":{
+                                          "$ref":"#/components/schemas/CreateEnablerRequest"
+                                        }
+                                    }
+                                  }
+                              },
+                              "UpgradeEnabler":{
+                                  "content":{
+                                    "application/json":{
+                                        "schema":{
+                                          "$ref":"#/components/schemas/UpgradeEnabler"
+                                        },
+                                        "example":{
+                                          "values":{
+                                              "globalService":true
+                                          },
+                                          "version":"0.1.0",
+                                          "timeout":160
+                                        }
+                                    },
+                                    "application/yaml":{
+                                        "schema":{
+                                          "$ref":"#/components/schemas/UpgradeEnabler"
+                                        }
+                                    }
+                                  }
+                              }
+                            },
+                            "responses":{
+                              "Conflict":{
+                                  "description":"The operation cannot be executed currently, due to a conflict with the state of the resource.",
+                                  "content":{
+                                    "application/json":{
+                                        "schema":{
+                                          "$ref":"#/components/schemas/ProblemDetails"
+                                        }
+                                    }
+                                  }
+                              },
+                              "BadRequest":{
+                                  "description":"Bad request. The server cannot process the request due to a client error.",
+                                  "content":{
+                                    "application/json":{
+                                        "schema":{
+                                          "$ref":"#/components/schemas/ProblemDetails"
+                                        }
+                                    }
+                                  }
+                              },
+                              "InternalServerError":{
+                                  "description":"Internal server error.",
+                                  "content":{
+                                    "application/json":{
+                                        "schema":{
+                                          "$ref":"#/components/schemas/ProblemDetails"
+                                        }
+                                    }
+                                  }
+                              }
+                            }
+                        }
+                      }
+                    
+                }
+            }
+          }
+        },
+        {
+          "endpoint": "/clusters",
+          "method": "GET",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/clusters",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "GET",
+              "host": [
+                {{ include "cluster.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false,
+              "is_collection": true,
+              "target": "",
+              "mapping": {
+                "collection": "clusters"
+              }
+            }
+          ]
+        },
+        {
+          "endpoint": "/clusters",
+          "method": "POST",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/clusters",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "POST",
+              "host": [
+                {{ include "cluster.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/clusters/{id}",
+          "method": "DELETE",
+          "output_encoding": "no-op",
+          "input_query_strings": [],
+          "backend": [
+            {
+              "url_pattern": "/clusters/{id}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "DELETE",
+              "host": [
+                {{ include "cluster.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ],
+          "input_headers": [
+            "Force"
+          ]
+        },
+        {
+          "endpoint": "/clusters/{id}",
+          "method": "GET",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/clusters/{id}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "GET",
+              "host": [
+                {{ include "cluster.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/clusters/cloud/find",
+          "method": "GET",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/clusters/cloud/find",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "GET",
+              "host": [
+                {{ include "cluster.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/clusters/node/{id}",
+          "method": "GET",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/clusters/node/{id}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "GET",
+              "host": [
+                {{ include "cluster.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/repos",
+          "method": "GET",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/repos",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "GET",
+              "host": [
+                {{ include "repository.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/repos/charts/{id}",
+          "method": "GET",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/repos/charts/{id}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "GET",
+              "host": [
+                {{ include "repository.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/repos/public",
+          "method": "POST",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/repos/public",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "POST",
+              "host": [
+                {{ include "repository.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/repos/private",
+          "method": "POST",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/repos/private",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "POST",
+              "host": [
+                {{ include "repository.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/repos/update",
+          "method": "POST",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/repos/update",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "POST",
+              "host": [
+                {{ include "repository.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/repos/{id}",
+          "method": "DELETE",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/repos/{id}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "DELETE",
+              "host": [
+                {{ include "repository.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/enabler",
+          "method": "POST",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/enabler",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "POST",
+              "host": [
+                {{ include "enablers.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/enabler/upgrade/{id}",
+          "method": "POST",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/enabler/upgrade/{id}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "POST",
+              "host": [
+                {{ include "enablers.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/enabler",
+          "method": "GET",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/enabler",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "GET",
+              "host": [
+                {{ include "enablers.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/enabler/cluster/{id}",
+          "method": "GET",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/enabler/cluster/{id}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "GET",
+              "host": [
+                {{ include "enablers.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/enabler/{id}",
+          "method": "DELETE",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/enabler/{id}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "DELETE",
+              "extra_config": {
+                "modifier/body-generator": {
+                  "template": "ewogICJ1cGRhdGUiOnsKICAgICJmb3JjZSI6ICJ7eyAucmVxX2JvZHkuZm9yY2V9fSIKICB9Cn0="
+                }
+              },
+              "host": [
+                {{ include "enablers.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ],
+          "input_headers": [
+            "Timeout",
+            "Force"
+          ]
+        },
+        {
+          "endpoint": "/enabler/volumes/{id}",
+          "method": "DELETE",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/enabler/volumes/{id}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "DELETE",
+              "host": [
+                {{ include "enablers.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        }
+      {{- if .Values.tags.pilot }}
+        ,{
+          "endpoint": "/car/group/{id}",
+          "method": "GET",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/car/group/{id}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "GET",
+              "host": [
+                {{ include "car.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/car/group",
+          "method": "GET",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/car/group",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "GET",
+              "host": [
+                {{ include "car.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/car/group",
+          "method": "POST",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/car/group",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "POST",
+              "host": [
+                {{ include "car.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/car/group/{id}",
+          "method": "DELETE",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/car/group/{id}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "DELETE",
+              "host": [
+                {{ include "car.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/car/cluster/{id}",
+          "method": "GET",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/car/cluster/{id}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "GET",
+              "host": [
+                {{ include "car.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/car/cluster/group/{car}",
+          "method": "GET",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/car/cluster/group/{car}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "GET",
+              "host": [
+                {{ include "car.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/car/cluster/group/csv/{car}",
+          "method": "GET",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/car/cluster/group/csv/{car}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "GET",
+              "host": [
+                {{ include "car.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/car/cluster",
+          "method": "POST",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/car/cluster",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "POST",
+              "host": [
+                {{ include "car.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/car/cluster/{car}",
+          "method": "DELETE",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/car/cluster/{car}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "DELETE",
+              "host": [
+                {{ include "car.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/car/enabler/{car}",
+          "method": "GET",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/car/enabler/{car}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "GET",
+              "host": [
+                {{ include "car.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/car/enabler/{group}/{car}",
+          "method": "POST",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/car/enabler/{group}/{car}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "POST",
+              "host": [
+                {{ include "car.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/car/enabler/{group}",
+          "method": "POST",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/car/enabler/{group}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "POST",
+              "host": [
+                {{ include "car.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/car/enabler/group/{group}/{enablerName}",
+          "method": "DELETE",
+          "output_encoding": "no-op",
+          "backend": [
+            {
+              "url_pattern": "/car/enabler/group/{group}/{enablerName}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "DELETE",
+              "host": [
+                {{ include "car.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/car/enabler/car/{group}/{car}/{enablerName}",
+          "method": "DELETE",
+          "output_encoding": "no-op",
+          "input_query_strings": [
+            "enablerName"
+          ],
+          "backend": [
+            {
+              "url_pattern": "/car/enabler/car/{group}/{car}/{enablerName}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "DELETE",
+              "host": [
+                {{ include "car.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        },
+        {
+          "endpoint": "/car/enabler/group/{group}",
+          "method": "GET",
+          "output_encoding": "no-op",
+          "input_query_strings": [
+            "enablerName"
+          ],
+          "backend": [
+            {
+              "url_pattern": "/car/enabler/group/{group}",
+              "encoding": "no-op",
+              "sd": "static",
+              "method": "GET",
+              "host": [
+                {{ include "car.uri" . | quote }}
+              ],
+              "disable_host_sanitize": false
+            }
+          ]
+        }
+      {{- end }}
+      ]
+    }

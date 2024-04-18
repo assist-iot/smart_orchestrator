@@ -1,0 +1,69 @@
+{{- if .Values.tags.pilot }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ftltse.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "ftltse.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.ftltse.autoscaling.enabled }}
+  replicas: {{ .Values.ftltse.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "ftltse.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ftltse.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.ftltse.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+      - name: ft-test-ftltse
+        image: alpine:latest
+        command: ["sh", "-c",{{ include "ft.initContainerCommand" . | quote }}]
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.ftltse.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.ftltse.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ftltse.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.ftltse.podSecurityContext | nindent 8 }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: ftltse
+          securityContext:
+            {{- toYaml .Values.ftltse.securityContext | nindent 12 }}
+          image: "{{ .Values.ftltse.image.repository }}:{{ .Values.ftltse.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.ftltse.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.ftltse.resources | nindent 12 }}
+          env:
+            - name: LTSE_HOST
+              value: {{ include "api.fullname" .Subcharts.ltse | quote}}
+            - name: LTSE_PORT
+              value: {{ .Values.ftltse.envVars.ltsePort | quote}}
+            - name: LTSE_INDEX_OBM
+              value: {{ .Values.ftltse.envVars.ltseIndexObm | quote}}
+            - name: LTSE_INDEX_DRIVELET
+              value: {{ .Values.ftltse.envVars.ltseIndexDrivelet | quote}}
+            - name: KAFKA_BUS
+              value: {{ include "kafka.fullname" .Subcharts.ft | quote}}
+{{- end }}

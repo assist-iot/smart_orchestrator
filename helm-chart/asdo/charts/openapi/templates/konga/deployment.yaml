@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "konga.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "konga.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.konga.autoscaling.enabled }}
+  replicas: {{ .Values.konga.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "konga.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "konga.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.konga.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.konga.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.konga.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.konga.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.konga.podSecurityContext | nindent 8 }}
+      containers:
+        - name: konga
+          securityContext:
+            {{- toYaml .Values.konga.securityContext | nindent 12 }}
+          image: "{{ .Values.konga.image.repository }}:{{ .Values.konga.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.konga.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.konga.service.containerPort }}
+              protocol: {{ .Values.konga.service.protocol }}
+          resources:
+            {{- toYaml .Values.konga.resources | nindent 12 }}
+          env:
+            - name: NODE_ENV
+              value: {{ .Values.konga.envVars.nodeEnv | quote }}
+            - name: BASE_URL
+              value: {{ .Values.konga.envVars.baseUrl | quote }}
+
+

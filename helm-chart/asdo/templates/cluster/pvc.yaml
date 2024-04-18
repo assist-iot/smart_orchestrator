@@ -1,0 +1,13 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ .Values.cluster.volumes.pvc.name | quote }}
+  labels:
+    {{- include "cluster.selectorLabels" . | nindent 8 }}
+spec:
+  accessModes:
+    - {{ .Values.cluster.volumes.pvc.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.cluster.volumes.pvc.size | quote }}
+  storageClassName:  {{ .Values.cluster.volumes.pvc.storageClassName | quote }}

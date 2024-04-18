@@ -1,0 +1,40 @@
+{{- if .Values.tags.pilot }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "indexcountry.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "indexcountry.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.indexcountry.schedule | quote }}
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          {{- with .Values.indexcountry.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
+          securityContext:
+            {{- toYaml .Values.indexcountry.podSecurityContext | nindent 12 }}
+          containers:
+          - name: indexcountry
+            securityContext:
+              {{- toYaml .Values.indexcountry.securityContext | nindent 14 }}
+            image: "{{ .Values.indexcountry.image.repository }}:{{ .Values.indexcountry.image.tag | default .Chart.AppVersion }}"
+            imagePullPolicy: {{ .Values.indexcountry.image.pullPolicy }}
+            {{- with .Values.indexcountry.envVars }}
+            env:
+              - name: THRESHOLD
+                value: {{ .threshold | quote }}
+              - name: CARINDEX
+                value: {{ .carindex | quote }}
+            {{- end }}
+              - name: ELASTIC_URL
+                value: {{ include "ltse.uri" . | quote}}
+          restartPolicy: {{ .Values.indexcountry.restartPolicy }}
+{{- end }}

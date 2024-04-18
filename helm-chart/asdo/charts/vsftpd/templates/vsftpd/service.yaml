@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "vsftpd.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "vsftpd.labels" . | nindent 4 }}
+  annotations:
+    {{- if .Values.globalService }}
+    {{- include "globalServiceAnnotations" . | nindent 4 }}
+    {{- end }}
+spec:
+  type: {{ .Values.vsftpd.service.type }}
+  ports:
+    - name: ftp1
+      port: {{ .Values.vsftpd.service.ports.ftp1.port }}
+      targetPort: {{ .Values.vsftpd.service.ports.ftp1.targetPort }}
+      protocol: {{ .Values.vsftpd.service.ports.ftp1.protocol }}
+      {{- if and (or (eq .Values.vsftpd.service.type "NodePort") (eq .Values.vsftpd.service.type "LoadBalancer")) (not (empty .Values.vsftpd.service.ports.ftp1.nodePort)) }}
+      nodePort: {{ .Values.vsftpd.service.ports.ftp1.nodePort }}
+      {{- end }}
+    - name: ftp2
+      port: {{ .Values.vsftpd.service.ports.ftp2.port }}
+      targetPort: {{ .Values.vsftpd.service.ports.ftp2.targetPort }}
+      protocol: {{ .Values.vsftpd.service.ports.ftp2.protocol }}
+      {{- if and (or (eq .Values.vsftpd.service.type "NodePort") (eq .Values.vsftpd.service.type "LoadBalancer")) (not (empty .Values.vsftpd.service.ports.ftp2.nodePort)) }}
+      nodePort: {{ .Values.vsftpd.service.ports.ftp2.nodePort }}
+      {{- end }}
+    - name: ftp3
+      port: {{ .Values.vsftpd.service.ports.ftp3.port }}
+      targetPort: {{ .Values.vsftpd.service.ports.ftp3.targetPort }}
+      protocol: {{ .Values.vsftpd.service.ports.ftp3.protocol }}
+      {{- if and (or (eq .Values.vsftpd.service.type "NodePort") (eq .Values.vsftpd.service.type "LoadBalancer")) (not (empty .Values.vsftpd.service.ports.ftp3.nodePort)) }}
+      nodePort: {{ .Values.vsftpd.service.ports.ftp3.nodePort }}
+      {{- end }}
+  selector:
+  
+    {{- include "vsftpd.selectorLabels" . | nindent 4 }}

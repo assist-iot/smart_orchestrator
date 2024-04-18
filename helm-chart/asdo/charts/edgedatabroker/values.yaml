@@ -1,0 +1,289 @@
+# Default values for enabler.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# String to partially override enabler.fullname template (will maintain the release name).
+nameOverride: ""
+# String to fully override enabler.fullname template.
+fullnameOverride: ""
+# Deploy all the components in specific K8s node(s).
+enablerNodeSelector: {
+  # "pilotrole":"edbe"
+}
+# Cilium Multi-cluster global service.
+globalService: false
+
+# Component vernemq values.
+vernemq:
+  tier: external
+  replicaCount: 1
+
+  # Configuration of the container image.
+  imagePullSecrets: []
+  image:
+    repository: vernemq/vernemq
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  
+  # Configuration of the service: type and ports.
+  service:
+    type: NodePort
+    ports:
+      mqtt:
+        enabled: true
+        port: 1883
+        targetPort: 1883
+        containerPort: 1883
+        nodePort: "1883"
+        protocol: TCP
+      mqtts:
+        enabled: true
+        port: 8883
+        targetPort: 8883
+        containerPort: 8883
+        nodePort: "31883"
+        protocol: TCP
+      ws:
+        enabled: true
+        port: 9001
+        targetPort: 9001
+        containerPort: 9001
+        nodePort: ""
+        protocol: TCP
+      wss:
+        enabled: false
+        port: 9002
+        targetPort: 9002
+        containerPort: 9002
+        nodePort: ""
+        protocol: TCP
+      prometheus:
+        enabled: true
+        port: 8888
+        targetPort: 8888
+        containerPort: 8888
+        nodePort: ""
+        protocol: TCP
+
+  # The specification of the resources is needed for the proper functioning 
+  # of the Smart Orchestrator enabler (requests)
+  # and of the Resource provisioning enabler (limits).
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    # minReplicas: 1
+    # maxReplicas: 3
+    # targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  secretMounts:
+   - name: vernemq-certificates
+     secretName: vernemq-tls-secret
+     path: /etc/ssl/vernemq
+
+  certificates: {}
+  # Include here the environment variables to be used in containers section of the component's manifest.
+  # TODO: Here and in the manifest is included an example, please adapt them to the requirements of your component.
+  envVars:
+    DOCKER_VERNEMQ_ACCEPT_EULA: "yes"
+    DOCKER_VERNEMQ_ALLOW_ANONYMOUS: "on"
+    DOCKER_VERNEMQ_LISTENER__SSL__CAFILE: "/etc/ssl/vernemq/ca.pem"
+    DOCKER_VERNEMQ_LISTENER__SSL__CERTFILE: "/etc/ssl/vernemq/tls.pem"
+    DOCKER_VERNEMQ_LISTENER__SSL__KEYFILE: "/etc/ssl/vernemq/tls_key.pem"
+    DOCKER_VERNEMQ_LISTENER__SSL__DEFAULT: "0.0.0.0:8883"
+
+  # Component data persistence
+  persistence:
+    enabled: true
+    existingClaim: ""
+    # mountPath: /path/in/container
+    accessModes:
+      - ReadWriteOnce
+    size: 50Mi
+
+  # Configure this parameters to deploy the component in specific K8s node(s).
+  nodeSelector: {
+    #  "pilotrole":"edbe"
+  }
+  tolerations: []
+  affinity: {}
+
+# Component frscript values.
+frscript:
+
+  enabled: false
+  tier: internal
+  replicaCount: 1
+
+  # Configuration of the container image.
+  imagePullSecrets: []
+  image:
+    repository: kostasiccs/fr-script-2
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  
+  # Configuration of the service: type and ports.
+  service:
+    type: NodePort
+    ports:
+      api:
+        enabled: true
+        port: 9877
+        targetPort: 9877
+        containerPort: 9877
+        nodePort: ""
+        protocol: TCP
+      metrics:
+        enabled: true
+        port: 8000
+        targetPort: 8000
+        containerPort: 8000
+        nodePort: ""
+        protocol: TCP
+
+  # The specification of the resources is needed for the proper functioning 
+  # of the Smart Orchestrator enabler (requests)
+  # and of the Resource provisioning enabler (limits).
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    # minReplicas: 1
+    # maxReplicas: 3
+    # targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+#  secretMounts:
+#    - name: vernemq-certificates
+#      secretName: vernemq-certificates-secret
+#      path: /etc/ssl/frscript
+
+  # Include here the environment variables to be used in containers section of the component's manifest.
+  # TODO: Here and in the manifest is included an example, please adapt them to the requirements of your component.
+  envVars:
+    VERNEMQ_PORT: "1883"
+    FR_SCRIPT_SSL_ENABLED: "False"
+
+#Here
+  # Component data persistence
+#  persistence:
+#    enabled: true
+#    existingClaim: ""
+    # mountPath: /path/in/container
+#    accessModes:
+#      - ReadWriteOnce
+#    size: 50Mi
+
+  # Configure this parameters to deploy the component in specific K8s node(s).
+  nodeSelector: {
+   "pilotrole":"edbe"
+   }
+  tolerations: []
+  affinity: {}
+
+# Component mqttexplorer values.
+mqttexplorer:
+
+  enabled: false
+  tier: internal
+  replicaCount: 1
+
+  # Configuration of the container image.
+  imagePullSecrets: []
+  image:
+    repository: smeagolworms4/mqtt-explorer
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  
+  # Configuration of the service: type and ports.
+  service:
+    type: NodePort
+    ports:
+      ui:
+        enabled: true
+        port: 4000
+        targetPort: 4000
+        containerPort: 4000
+        nodePort: ""
+        protocol: TCP
+
+  # The specification of the resources is needed for the proper functioning 
+  # of the Smart Orchestrator enabler (requests)
+  # and of the Resource provisioning enabler (limits).
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    # minReplicas: 1
+    # maxReplicas: 3
+    # targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  # Include here the environment variables to be used in containers section of the component's manifest.
+  # TODO: Here and in the manifest is included an example, please adapt them to the requirements of your component.
+  envVars:
+    CONFIG_PATH: /etc/config
+
+
+  # Configure this parameters to deploy the component in specific K8s node(s).
+  nodeSelector: {
+   "pilotrole":"edbe"
+  }
+  tolerations: []
+  affinity: {}
+

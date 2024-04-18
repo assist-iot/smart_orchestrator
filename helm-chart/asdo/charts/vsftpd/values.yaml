@@ -1,0 +1,98 @@
+# Default values for enabler.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# String to partially override enabler.fullname template (will maintain the release name).
+nameOverride: ""
+# String to fully override enabler.fullname template.
+fullnameOverride: ""
+# Deploy all the components in specific K8s node(s).
+enablerNodeSelector: {}
+# Cilium Multi-cluster global service.
+globalService: false
+
+# Component vsftpd values.
+vsftpd:
+  tier: external
+  replicaCount: 1
+
+  # Configuration of the container image.
+  imagePullSecrets: []
+  image:
+    repository: markhobson/vsftpd
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  
+  # Configuration of the service: type and ports.
+  service:
+    type: NodePort
+    ports:
+      ftp1:
+        port: 20
+        targetPort: 20
+        containerPort: 20
+        nodePort: 11329
+        protocol: TCP
+      ftp2:
+        port: 21
+        targetPort: 21
+        containerPort: 21
+        nodePort: 32511
+        protocol: TCP
+      ftp3:
+        port: 32512
+        targetPort: 32512
+        containerPort: 32512
+        nodePort: 32512
+        protocol: TCP        
+
+  # The specification of the resources is needed for the proper functioning 
+  # of the Smart Orchestrator enabler (requests)
+  # and of the Resource provisioning enabler (limits).
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    # minReplicas: 1
+    # maxReplicas: 3
+    # targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  # Include here the environment variables to be used in containers section of the component's manifest.
+  # TODO: Here and in the manifest is included an example, please adapt them to the requirements of your component.
+  envVars:
+    FTP_USER: pilot3a
+    FTP_PASS: oEZ5HjeGH5v7hetM5GXfzpWBrZQ
+    PASV_ENABLE: "YES"
+    # PASV_ADDRESS: "192.168.250.219"
+    SSL_ENABLE: "YES"
+    TLS_CERT: tls.crt    
+    TLS_KEY: tls.key    
+  # Component data persistence
+  # Directory of the host in which all the files of the ftp server will be
+  persistence:
+    hostPath: /home/user/vsftpd_enabler/files
+
+  # Configure this parameters to deploy the component in specific K8s node(s).
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+

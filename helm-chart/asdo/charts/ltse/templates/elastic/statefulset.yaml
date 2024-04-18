@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "elastic.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "elastic.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "elastic.fullname" . }}-headless
+  {{- if not .Values.elastic.autoscaling.enabled }}
+  replicas: {{ .Values.elastic.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "elastic.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "elastic.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.elastic.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.elastic.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.elastic.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.elastic.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.elastic.podSecurityContext | nindent 8 }}
+      containers:
+        - name: elastic
+          securityContext:
+            {{- toYaml .Values.elastic.securityContext | nindent 12 }}
+          image: "{{ .Values.elastic.image.repository }}:{{ .Values.elastic.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.elastic.image.pullPolicy }}
+          ports:
+            - name: api
+              containerPort: {{ .Values.elastic.service.ports.api.containerPort }}
+              protocol: {{ .Values.elastic.service.ports.api.protocol }}
+            - name: nodes
+              containerPort: {{ .Values.elastic.service.ports.nodes.containerPort }}
+              protocol: {{ .Values.elastic.service.ports.nodes.protocol }}
+          resources:
+            {{- toYaml .Values.elastic.resources | nindent 12 }}
+          {{- with .Values.elastic.envVars }}
+          env:
+            - name: discovery.type
+              value: {{ .discoveryType | quote }}
+            - name: node.name
+              value: {{ .nodeName | quote }}
+          {{- end }}
+          volumeMounts:
+            {{- if .Values.elastic.persistence.enabled }}
+            - name: data
+              mountPath: /usr/share/elasticsearch/data
+            {{- end }}
+      volumes:
+  {{- if and .Values.elastic.persistence.enabled .Values.elastic.persistence.existingClaim }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ tpl .Values.elastic.persistence.existingClaim $ }}
+  {{- else if not .Values.elastic.persistence.enabled }}
+        - name: data
+          emptyDir: {}
+  {{- else }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+        {{- range .Values.elastic.persistence.accessModes }}
+          - {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.elastic.persistence.size | quote }}
+  {{- end }}

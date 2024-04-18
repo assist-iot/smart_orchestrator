@@ -1,0 +1,6 @@
+apiVersion: v2
+appVersion: 1.0.0
+description: Semantic Repository enabler
+name: semanticrepository
+type: application
+version: 1.0.0

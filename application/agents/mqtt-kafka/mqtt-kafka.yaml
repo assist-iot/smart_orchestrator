@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    tier: connector
+    type: mqtt-kafka
+  name: mqtt-kafka-connector
+  namespace: kafka2
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      tier: connector
+      type: mqtt-kafka
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        tier: connector
+        type: mqtt-kafka
+    spec:
+      containers:
+      - env:
+        - name: MQTT_BROKER
+          value: "192.168.250.124"
+        - name: MQTT_PORT
+          value: "31883"
+        - name: KAFKA_BUS
+          value: kafka-service.kafka2
+        image: fmbiot/mqtt-kafka-connector:1.0.2
+        imagePullPolicy: IfNotPresent
+        name: mqtt-kafka-connector
+        # resources:
+        #   limits:
+        #     cpu: 500m
+        #     memory: 128Mi
+        #   requests:
+        #     cpu: 250m
+        #     memory: 64Mi

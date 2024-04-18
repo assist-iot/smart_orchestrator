@@ -1,0 +1,13 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ .Values.pudfederate.volumes.pvc.name | quote }}
+  labels:
+    {{- include "pudfederate.selectorLabels" . | nindent 8 }}
+spec:
+  accessModes:
+    - {{ .Values.pudfederate.volumes.pvc.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.pudfederate.volumes.pvc.size | quote }}
+  storageClassName:  {{ .Values.pudfederate.volumes.pvc.storageClassName | quote }}

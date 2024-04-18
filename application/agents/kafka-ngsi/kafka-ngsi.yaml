@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    tier: connector
+    type: kafka-ngsi
+  name: kafka-ngsi-connector
+  namespace: kafka2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: connector
+      type: kafka-ngsi
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        tier: connector
+        type: kafka-ngsi
+    spec:
+      containers:
+      - env:
+        - name: ORION_HOST
+          value: "orion.fiware"
+        - name: ORION_PORT
+          value: "1026"
+        - name: KAFKA_BUS
+          value: kafka-service.kafka2
+        image: fmbiot/kafka-ngsi-connector:1.0.3
+        imagePullPolicy: IfNotPresent
+        name: kafka-ngsi-connector
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 250m
+            memory: 64Mi

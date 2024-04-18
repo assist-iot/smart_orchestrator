@@ -1,0 +1,5 @@
+neuralprophet
+pandas
+pymysql
+pymongo
+peewee==3.14.10

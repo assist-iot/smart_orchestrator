@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "tm.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "tm.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.scheduler.prediction.tm.schedule | quote }}
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 3
+      template:
+        spec:
+          {{- with .Values.scheduler.prediction.tm.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
+          securityContext:
+            {{- toYaml .Values.scheduler.prediction.tm.podSecurityContext | nindent 12 }}
+          containers:
+          - name: tm
+            securityContext:
+              {{- toYaml .Values.scheduler.prediction.tm.securityContext | nindent 14 }}
+            image: "{{ .Values.scheduler.prediction.tm.image.repository }}:{{ .Values.scheduler.prediction.tm.image.tag | default .Chart.AppVersion }}"
+            imagePullPolicy: {{ .Values.scheduler.prediction.tm.image.pullPolicy }}
+            env:
+                {{- with .Values.scheduler.prediction.mysql.envVars }}
+                - name: MYSQL_USER
+                  value: {{ .user | quote }} 
+                - name: MYSQL_PASSWORD
+                  value: {{ .password | quote }}
+                - name: MYSQL_DATABASE
+                  value: {{ .data | quote }}
+                {{- end }}
+                - name: MYSQL_HOST
+                  value: {{ include "mysql.fullname" . }}
+                - name: MYSQL_PORT
+                  value: {{ .Values.scheduler.prediction.mysql.service.ports.mysql.containerPort | quote }}
+                - name: MONGODB_HOST
+                  value: {{ include "db.fullname" . }}
+                {{- with .Values.scheduler.prediction.tm.envVars }}
+                - name: HISTORY_DATA
+                  value: {{ .historydata | quote }}
+                - name: FUTURE_DATA
+                  value: {{ .futuredata | quote }}
+                {{- end }}
+          restartPolicy: {{ .Values.scheduler.prediction.tm.restartPolicy }}

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "repository.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "repository.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.repository.service.type }}
+  ports:
+    - name: repo
+      port: {{ .Values.repository.service.ports.repo.port }}
+      targetPort: {{ .Values.repository.service.ports.repo.targetPort }}
+      protocol: {{ .Values.repository.service.ports.repo.protocol }}
+      {{- if and (or (eq .Values.repository.service.type "NodePort") (eq .Values.repository.service.type "LoadBalancer")) (not (empty .Values.repository.service.ports.repo.nodePort)) }}
+      nodePort: {{ .Values.repository.service.ports.repo.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "repository.selectorLabels" . | nindent 4 }}

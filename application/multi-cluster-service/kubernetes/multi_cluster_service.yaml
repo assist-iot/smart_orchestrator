@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multiclusterservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: multiclusterservice
+  template:
+    metadata:
+      labels:
+        app: multiclusterservice
+    spec:
+      serviceAccountName: asdo
+      containers:
+      - image: fmbiot/mcs:latest
+        name: mcs
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: DB_CNN
+            value: "smartorchestrator-mongodb"

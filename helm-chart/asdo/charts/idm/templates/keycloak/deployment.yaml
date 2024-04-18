@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "keycloak.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "keycloak.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.keycloak.autoscaling.enabled }}
+  replicas: {{ .Values.keycloak.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "keycloak.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "keycloak.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.keycloak.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.keycloak.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.keycloak.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.keycloak.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.keycloak.podSecurityContext | nindent 8 }}
+      containers:
+        - name: keycloak
+          securityContext:
+            {{- toYaml .Values.keycloak.securityContext | nindent 12 }}
+          image: "{{ .Values.keycloak.image.repository }}:{{ .Values.keycloak.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.keycloak.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.keycloak.service.containerPort }}
+              protocol: {{ .Values.keycloak.service.protocol }}
+          resources:
+            {{- toYaml .Values.keycloak.resources | nindent 12 }}
+          env:
+            - name: DB_ADDR
+              value: {{ include "database.fullname" . }}
+            {{- with .Values.keycloak.envVars }}
+            - name: DB_DATABASE
+              value: {{ .dbDatabase | quote }}
+            - name: DB_PASSWORD
+              value: {{ .dbPassword | quote }}
+            - name: DB_SCHEMA
+              value: {{ .dbSchema | quote }}
+            - name: DB_USER
+              value: {{ .dbUser | quote }}
+            - name: DB_VENDOR
+              value: {{ .dbVendor | quote }}
+            - name: KEYCLOAK_PASSWORD
+              value: {{ .keycloakPassword | quote }}
+            - name: KEYCLOAK_USER
+              value: {{ .keycloakUser | quote }}
+            {{- end }}

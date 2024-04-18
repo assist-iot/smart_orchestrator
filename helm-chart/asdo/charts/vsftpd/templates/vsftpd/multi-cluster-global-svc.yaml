@@ -1,0 +1,17 @@
+{{- if .Values.globalService }}
+apiVersion: assist.eu/v1
+kind: MultiClusterService
+metadata:
+  name: {{ include "vsftpd.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  annotations:
+    io.cilium/global-service: "true"
+  labels:
+    {{- include "vsftpd.labels" . | nindent 4 }}
+spec:
+  ports:
+    - name: ftp
+      port: {{ .Values.vsftpd.service.ports.ftp.port }}
+      targetPort: {{ .Values.vsftpd.service.ports.ftp.targetPort }}
+      protocol: {{ .Values.vsftpd.service.ports.ftp.protocol }}
+{{- end }}

@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pudfederate.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "pudfederate.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.pudfederate.autoscaling.enabled }}
+  replicas: {{ .Values.pudfederate.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "pudfederate.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "pudfederate.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.pudfederate.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.pudfederate.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.pudfederate.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.pudfederate.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.pudfederate.podSecurityContext | nindent 8 }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: pudfederate
+          securityContext:
+            {{- toYaml .Values.pudfederate.securityContext | nindent 12 }}
+          image: "{{ .Values.pudfederate.image.repository }}:{{ .Values.pudfederate.image.tag | default .Chart.AppVersion }}"
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus/"
+          imagePullPolicy: {{ .Values.pudfederate.image.pullPolicy }}
+          ports:
+            - name: pudfederate
+              containerPort: {{ .Values.pudfederate.service.ports.pudfederate.containerPort }}
+              protocol: {{ .Values.pudfederate.service.ports.pudfederate.protocol }}
+          resources:
+            {{- toYaml .Values.pudfederate.resources | nindent 12 }}
+          volumeMounts:
+            - name: prometheus-config-volume
+              mountPath: /etc/prometheus/
+            - name: prometheus-storage-volume
+              mountPath: /prometheus/
+            - name: task-pv-storage
+              mountPath: "/prometheus/targets/"
+      volumes:
+      - name: prometheus-config-volume
+        configMap:
+          defaultMode: 420
+          name: {{ include "pudfederate.fullname" . }}
+
+      - name: prometheus-storage-volume
+        emptyDir: {}
+      
+      - name: task-pv-storage
+        persistentVolumeClaim:
+          claimName: {{ .Values.pudfederate.volumes.pvc.name | quote }}

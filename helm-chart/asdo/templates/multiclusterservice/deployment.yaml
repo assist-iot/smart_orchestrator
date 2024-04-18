@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "multiclusterservice.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "multiclusterservice.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.multiclusterservice.autoscaling.enabled }}
+  replicas: {{ .Values.multiclusterservice.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "multiclusterservice.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "multiclusterservice.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.multiclusterservice.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.multiclusterservice.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.multiclusterservice.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.multiclusterservice.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.multiclusterservice.podSecurityContext | nindent 8 }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: multiclusterservice
+          securityContext:
+            {{- toYaml .Values.multiclusterservice.securityContext | nindent 12 }}
+          image: "{{ .Values.multiclusterservice.image.repository }}:{{ .Values.multiclusterservice.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.multiclusterservice.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.multiclusterservice.resources | nindent 12 }}
+          env:
+            - name: MONGO_DB
+              value: {{ include "db.fullname" . | quote }}

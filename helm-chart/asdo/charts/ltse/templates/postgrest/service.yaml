@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "postgrest.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "postgrest.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.postgrest.service.type }}
+  ports:
+    - name: postgrest
+      port: {{ .Values.postgrest.service.ports.postgrest.port }}
+      targetPort: {{ .Values.postgrest.service.ports.postgrest.targetPort }}
+      protocol: {{ .Values.postgrest.service.ports.postgrest.protocol }}
+      {{- if and (or (eq .Values.postgrest.service.type "NodePort") (eq .Values.postgrest.service.type "LoadBalancer")) (not (empty .Values.postgrest.service.ports.postgrest.nodePort)) }}
+      nodePort: {{ .Values.postgrest.service.ports.postgrest.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "postgrest.selectorLabels" . | nindent 4 }}

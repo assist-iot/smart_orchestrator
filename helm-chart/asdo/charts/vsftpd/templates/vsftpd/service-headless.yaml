@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "vsftpd.svc.headless" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "vsftpd.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - name: ftp1
+      port: {{ .Values.vsftpd.service.ports.ftp1.port }}
+      targetPort: {{ .Values.vsftpd.service.ports.ftp1.targetPort }}
+      protocol: {{ .Values.vsftpd.service.ports.ftp1.protocol }}
+    - name: ftp2
+      port: {{ .Values.vsftpd.service.ports.ftp2.port }}
+      targetPort: {{ .Values.vsftpd.service.ports.ftp2.targetPort }}
+      protocol: {{ .Values.vsftpd.service.ports.ftp2.protocol }}
+  selector:
+    {{- include "vsftpd.selectorLabels" . | nindent 4 }}

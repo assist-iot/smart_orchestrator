@@ -1,0 +1,78 @@
+{{- if .Values.tags.pilot }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pilot.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "pilot.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.pilot.autoscaling.enabled }}
+  replicas: {{ .Values.pilot.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "pilot.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "pilot.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.pilot.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+      - name: db-test-pilot
+        image: alpine:latest
+        command: ["sh", "-c",{{ include "asdo.initContainerCommand" . | quote }}]
+      - name: mqtt-test-pilot
+        image: alpine:latest
+        command: ["sh", "-c",{{ include "mqtt.initContainerCommand" . | quote }}]
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.pilot.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.pilot.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.pilot.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.pilot.podSecurityContext | nindent 8 }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: pilot
+          securityContext:
+            {{- toYaml .Values.pilot.securityContext | nindent 12 }}
+          image: "{{ .Values.pilot.image.repository }}:{{ .Values.pilot.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.pilot.image.pullPolicy }}
+          ports:
+            - name: pilot
+              containerPort: {{ .Values.pilot.service.ports.pilot.containerPort }}
+              protocol: {{ .Values.pilot.service.ports.pilot.protocol }}
+          resources:
+            {{- toYaml .Values.pilot.resources | nindent 12 }}
+          env:
+          {{- range $key, $value := .Values.pilot.envVars }}
+            - name: {{ $key }}
+              value: {{ $value | quote}}
+          {{- end }}
+            - name: LTSE_URI
+              value: {{ include "ltse.uri" . | quote}}
+            - name: SEM_REPO
+              value: {{ include "semrepo.uri" . | quote}}
+            - name: MQTT_HOST
+              value: {{ include "vernemq.fullname" .Subcharts.edgedatabroker }}
+            - name: MQTT_PORT
+              value: {{ .Values.car.envVars.mqttPort | quote}}
+{{- end }}

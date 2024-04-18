@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "elastic.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "elastic.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.elastic.service.type }}
+  ports:
+    - name: api
+      port: {{ .Values.elastic.service.ports.api.port }}
+      targetPort: {{ .Values.elastic.service.ports.api.targetPort }}
+      protocol: {{ .Values.elastic.service.ports.api.protocol }}
+      {{- if and (or (eq .Values.elastic.service.type "NodePort") (eq .Values.elastic.service.type "LoadBalancer")) (not (empty .Values.elastic.service.ports.api.nodePort)) }}
+      nodePort: {{ .Values.elastic.service.ports.api.nodePort }}
+      {{- end }}
+    - name: nodes
+      port: {{ .Values.elastic.service.ports.nodes.port }}
+      targetPort: {{ .Values.elastic.service.ports.nodes.targetPort }}
+      protocol: {{ .Values.elastic.service.ports.nodes.protocol }}
+      {{- if and (or (eq .Values.elastic.service.type "NodePort") (eq .Values.elastic.service.type "LoadBalancer")) (not (empty .Values.elastic.service.ports.nodes.nodePort)) }}
+      nodePort: {{ .Values.elastic.service.ports.nodes.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "elastic.selectorLabels" . | nindent 4 }}

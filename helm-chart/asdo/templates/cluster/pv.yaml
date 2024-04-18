@@ -1,0 +1,14 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: {{ .Values.cluster.volumes.pv.name | quote }}
+  labels:
+    {{- include "cluster.selectorLabels" . | nindent 8 }}
+spec:
+  accessModes:
+    - {{ .Values.cluster.volumes.pv.accessMode | quote }}
+  capacity:
+    storage: {{ .Values.cluster.volumes.pv.size | quote }}
+  hostPath:
+    path: {{ .Values.cluster.volumes.pv.path | quote }}
+  storageClassName:  {{ .Values.cluster.volumes.pv.storageClassName | quote }}

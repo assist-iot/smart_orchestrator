@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "authzweb.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "authzweb.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.authzweb.autoscaling.enabled }}
+  replicas: {{ .Values.authzweb.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "authzweb.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "authzweb.labels" . | nindent 8 }}
+    spec:
+      initContainers:
+      - name: check-db-ready
+        image: "{{ .Values.authzdatabase.image.repository }}:{{ .Values.authzdatabase.image.tag }}"
+        command: ['sh', '-c',
+          'until mysql -u root --password={{ .Values.authzdatabase.envVars.mysql_root_password }} -h {{ include "authzdatabase.fullname" . }} -e "SHOW DATABASES"; 
+          do echo waiting for database; sleep 2; done;']
+      {{- with .Values.authzweb.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.enablerNodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if not .Values.enablerNodeSelector }}
+        {{- with .Values.authzweb.nodeSelector }}
+      nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.authzweb.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.authzweb.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.authzweb.podSecurityContext | nindent 8 }}
+      containers:
+        - name: authzweb
+          securityContext:
+            {{- toYaml .Values.authzweb.securityContext | nindent 12 }}
+          image: "{{ .Values.authzweb.image.repository }}:{{ .Values.authzweb.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.authzweb.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.authzweb.service.containerPort }}
+              protocol: {{ .Values.authzweb.service.protocol }}
+          resources:
+            {{- toYaml .Values.authzweb.resources | nindent 12 }}
+          env:
+            - name: DB_SERVICE
+              value: {{include "authzdatabase.fullname" . | quote }}
+            {{- with .Values.authzweb.envVars }}
+            - name: AUTHZSERVER_INSTANCE_TYPE
+              value: {{ .authserver_instance_type | quote }}
+            - name: MQTT_TOPIC
+              value: {{ .mqtt_topic| quote }}
+            - name: MQTT_QOS
+              value: {{ .mqtt_qos | quote }}
+            - name: MQTT_BROKER
+              value: {{ .mqtt_broker | quote }}
+            - name: MQTT_CLIENTID
+              value: {{ .mqtt_clientid | quote }}
+            - name: MQTT_USERNAME
+              value: {{ .mqtt_username | quote }}
+            - name: MQTT_PASSWORD
+              value: {{ .mqtt_password | quote }}
+            - name: ELASTIC_SERVER
+              value: {{ .elastic_server | quote }}
+            - name: ELASTIC_PORT
+              value: {{ .elastic_port| quote }}
+            - name: ELASTIC_INDEX
+              value: {{ .elastic_index | quote }}
+            - name: ELASTIC_SERVER_USER
+              value: {{ .elastic_server_user | quote }}
+            - name: ELASTIC_SERVER_PASS
+              value: {{ .elastic_server_pass | quote }}                   
+          {{- end }}
+          {{- with .Values.authzdatabase.envVars }}
+            - name: DB_PASSWORD
+              value: {{ .mysql_root_password | quote }}
+            - name: DB_USERNAME
+              value: {{ .mysql_root_username | quote }}
+            - name: DB_PORT
+              value: {{ .mysql_port | quote }}
+            - name: DB_DATABASE
+              value: {{ .mysql_database | quote }}                      
+            - name: JAVA_OPTS
+              value: "-DDB_PASSWORD=$(DB_PASSWORD) -DDB_USERNAME=$(DB_USERNAME) -DDB_SERVICE=$(DB_SERVICE) -DDB_PORT=$(DB_PORT) -DDB_DATABASE=$(DB_DATABASE)"
+            {{- end }}
+
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

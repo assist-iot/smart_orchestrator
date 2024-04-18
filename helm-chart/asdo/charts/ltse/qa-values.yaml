@@ -1,0 +1,258 @@
+# Default values for enabler.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# String to partially override enabler.fullname template (will maintain the release name)
+nameOverride: ""
+# String to fully override enabler.fullname template
+fullnameOverride: ""
+# Deploy all the components in the same node
+enablerNodeSelector: {}
+# Cilium Multi-cluster global service
+globalService: false
+
+# Component api values
+api:
+  tier: external
+  replicaCount: 1
+
+  # Configuration of the container image
+  imagePullSecrets: []
+  image:
+    repository: gitlab.assist-iot.eu:5050/enablers-registry/public/ltse/api
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+    pullPolicy: IfNotPresent
+  
+  # Configuration of the service: type and ports
+  service:
+    type: NodePort
+    ports:
+      api:
+        port: 8080
+        targetPort: 8080
+        containerPort: 8080
+        protocol: TCP
+
+  # The specification of the resources is needed for the proper functioning 
+  # of the Smart Orchestrator enabler (requests)
+  # and of the Resource provisioning enabler (limits)
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    # minReplicas: 1
+    # maxReplicas: 3
+    # targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  # Include here the environment variables to be used in the component's manifest (container section).
+  # Here and in the manifest is included an example.
+  envVars: {}
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Component elastic values
+elastic:
+  tier: internal
+  replicaCount: 1
+
+  # Configuration of the container image
+  imagePullSecrets: []
+  image:
+    repository: elasticsearch
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "7.16.3"
+    pullPolicy: IfNotPresent
+  
+  # Configuration of the service: type and ports
+  service:
+    type: ClusterIP
+    ports:
+      api:
+        port: 9200
+        targetPort: 9200
+        containerPort: 9200
+        protocol: TCP
+      nodes:
+        port: 9300
+        targetPort: 9300
+        containerPort: 9300
+        protocol: TCP
+
+  # The specification of the resources is needed for the proper functioning 
+  # of the Smart Orchestrator enabler (requests)
+  # and of the Resource provisioning enabler (limits)
+  resources:
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    requests:
+      cpu: 300m
+      memory: 8Gi
+
+  autoscaling:
+    enabled: false
+
+  podSecurityContext: {}
+  securityContext: {}
+
+  # Include here the environment variables to be used in the component's manifest (container section).
+  # Here and in the manifest is included an example.
+  envVars:
+    discoveryType: single-node
+    nodeName: ltse
+
+  persistence:
+    enabled: true
+    existingClaim: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Component postgrest values
+postgrest:
+  tier: internal
+  replicaCount: 1
+
+  # Configuration of the container image
+  imagePullSecrets: []
+  image:
+    repository: postgrest/postgrest
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "v9.0.0"
+    pullPolicy: IfNotPresent
+  
+  # Configuration of the service: type and ports
+  service:
+    type: ClusterIP
+    ports:
+      postgrest:
+        port: 3000
+        targetPort: 3000
+        containerPort: 3000
+        protocol: TCP
+
+  # The specification of the resources is needed for the proper functioning 
+  # of the Smart Orchestrator enabler (requests)
+  # and of the Resource provisioning enabler (limits)
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    # minReplicas: 1
+    # maxReplicas: 3
+    # targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+
+  podSecurityContext: {}
+  securityContext: {}
+
+  # Include here the environment variables to be used in the component's manifest (container section).
+  # Here and in the manifest is included an example.
+  envVars:
+    pgrstDBSchema: public
+    pgrstDbAnonRole: postgres
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Component postgresql values
+postgresql:
+  tier: internal
+  replicaCount: 1
+
+  # Configuration of the container image
+  imagePullSecrets: []
+  image:
+    repository: postgres
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "14.2"
+    pullPolicy: IfNotPresent
+  
+  # Configuration of the service: type and ports
+  service:
+    type: ClusterIP
+    ports:
+      postgresql:
+        port: 5432
+        targetPort: 5432
+        containerPort: 5432
+        protocol: TCP
+
+  # The specification of the resources is needed for the proper functioning 
+  # of the Smart Orchestrator enabler (requests)
+  # and of the Resource provisioning enabler (limits)
+  resources:
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    requests:
+      cpu: 200m
+      memory: 2Gi
+
+  autoscaling:
+    enabled: false
+    # minReplicas: 1
+    # maxReplicas: 3
+    # targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  # Include here the environment variables to be used in the component's manifest (container section).
+  # Here and in the manifest is included an example.
+  envVars:
+    postgresUser: postgres
+    postgresPassword: 4ss1st10t
+    postgresDb: assist
+
+  persistence:
+    enabled: true
+    existingClaim: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 500Mi
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
